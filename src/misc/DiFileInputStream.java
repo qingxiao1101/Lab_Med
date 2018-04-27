@@ -122,8 +122,29 @@ public class DiFileInputStream extends FileInputStream {
     public boolean skipHeader() throws IOException {
     	// exercise 1 - skip header, return true if prefix = DICM.
     	// dont forget to set the _location attribute !
+    	byte[] head = new byte[128];   	
+    	int r = read(head);
+    	if(r == -1) 
+    		return false;
+    	else
+    	{   		
+			byte[] symbol = new byte[4];
+			int n = getInt();
+			symbol[0] = (byte)(n>>0);
+			symbol[1] =  (byte)(0xff & n>>8);
+			symbol[2] =  (byte)(0xff & n>>16);
+			symbol[3] =  (byte)(0xff & n>>24);
+			//for(int i=0;i<4;i++)
+			//	System.out.print((char)symbol[i]);
+			//	System.out.println(" ");
+			if(symbol[0]=='D' && symbol[1]=='I' && symbol[2]=='C' && symbol[3]=='M')
+				return true;
+			else
+				return false;
+    	}
     	
-    	return false;
+
+    	
     }
     
     

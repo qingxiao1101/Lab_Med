@@ -33,6 +33,35 @@ public class DiDataElement {
 	 */
 	public void readNext(DiFileInputStream is) throws Exception {
     	// exercise 1
+
+		setGroupID(is.getShort());
+		setElementID(is.getShort());
+		setVR(is.getShort());
+		String vrString = getVRString();
+		if(vrString=="OB" || vrString=="OW" || vrString=="SQ" || vrString=="UT" || vrString=="UN") {//explizite VR 2 byte uebersprungen werden
+			is.getShort();
+			setVL(is.getInt());
+			
+		}
+		else if(vrString=="AE" || vrString=="AS" || vrString=="AT" || vrString=="CS" || vrString=="DA" || 
+				vrString=="DS" || vrString=="DT" || vrString=="FD" || vrString=="FL" || vrString=="IS" || 
+				vrString=="LO" || vrString=="LT" || vrString=="PN" || vrString=="SH" || vrString=="SL" ||
+				vrString=="SS" || vrString=="ST" || vrString=="TM" || vrString=="UI" || vrString=="UL" ||
+				vrString=="US" || vrString=="OF" || vrString=="QQ" || vrString=="OX" || vrString=="DL" ||
+				vrString=="XX") {
+			setVL(is.getShort());
+		}
+		else {
+			short l_vl = (short)is.getShort();
+			int vl = getVR()<<16 + l_vl;
+			setVL(vl);			
+		}
+		
+		byte[] values = new byte[getVL()];
+		for(int i=0;i<getVL();i++)
+			values[i] = (byte)is.read();
+		setValues(values);
+			
 	}
 
 	/**

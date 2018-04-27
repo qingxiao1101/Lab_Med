@@ -1,7 +1,10 @@
 package main;
 
+import java.io.IOException;
+
 import javax.swing.UIManager;
 
+import misc.DiFileInputStream;
 import misc.Viewport3d;
 
 /**
@@ -62,7 +65,17 @@ public class LabMed {
 	 * @param args currently no program specific arguments
 	 */
 	public static void main(String[] args) {				
-		System.out.println("helloworld");
+		String filename = "./test.txt";
+		try {
+			DiFileInputStream diFile = new DiFileInputStream(filename);
+			if(diFile.skipHeader())
+				System.out.println("ja");
+			System.out.println("now location is:" + diFile.get_location());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		/*	
 		// the global image stack
 		_is = ImageStack.getInstance(); 		
