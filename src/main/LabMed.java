@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.swing.UIManager;
 
 import misc.DiFileInputStream;
+import misc.DiFile;
 import misc.Viewport3d;
 
 /**
@@ -63,14 +64,19 @@ public class LabMed {
 	 * Good old main.
 	 * 
 	 * @param args currently no program specific arguments
+	 * @throws Exception 
 	 */
-	public static void main(String[] args) {				
-		String filename = "./test.txt";
+	public static void main(String[] args) throws Exception {				
+		String filename = "./CTHd010";
 		try {
+			DiFile test = new DiFile();
+			test.initFromFile(filename);
+			/*
 			DiFileInputStream diFile = new DiFileInputStream(filename);
 			if(diFile.skipHeader())
 				System.out.println("ja");
 			System.out.println("now location is:" + diFile.get_location());
+			*/
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

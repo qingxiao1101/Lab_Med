@@ -1,5 +1,5 @@
 package misc;
-
+import misc.DiDi;
 /**
  * Implements the internal representation of a DICOM Data Element.
  * 
@@ -36,25 +36,37 @@ public class DiDataElement {
 
 		setGroupID(is.getShort());
 		setElementID(is.getShort());
-		setVR(is.getShort());
-		String vrString = getVRString();
-		if(vrString=="OB" || vrString=="OW" || vrString=="SQ" || vrString=="UT" || vrString=="UN") {//explizite VR 2 byte uebersprungen werden
+		//--------------------
+		int vr_ = is.getShort();
+		int low,high;
+		high = (vr_ >> 8) & 0x00ff;
+		low = vr_ & 0x00ff;
+		vr_ = low<<8 | high;
+		//--------------------
+		setVR(vr_);
+		//System.out.println(getVRString());
+		//System.out.println(getTagString());
+		//System.out.println(Integer.toHexString(low));
+		//System.out.println(Integer.toHexString(high));
+		//System.out.println(Integer.toHexString(is.getShort()));	
+		switch(getVR()) {
+		case DiDi.OB: case DiDi.OW:case DiDi.SQ:case DiDi.UT:case DiDi.UN:{
 			is.getShort();
 			setVL(is.getInt());
-			
-		}
-		else if(vrString=="AE" || vrString=="AS" || vrString=="AT" || vrString=="CS" || vrString=="DA" || 
-				vrString=="DS" || vrString=="DT" || vrString=="FD" || vrString=="FL" || vrString=="IS" || 
-				vrString=="LO" || vrString=="LT" || vrString=="PN" || vrString=="SH" || vrString=="SL" ||
-				vrString=="SS" || vrString=="ST" || vrString=="TM" || vrString=="UI" || vrString=="UL" ||
-				vrString=="US" || vrString=="OF" || vrString=="QQ" || vrString=="OX" || vrString=="DL" ||
-				vrString=="XX") {
+		}break;		
+		case DiDi.AE:case DiDi.AS:case DiDi.AT:case DiDi.CS:case DiDi.DA:
+		case DiDi.DS:case DiDi.DT:case DiDi.FD:case DiDi.FL:case DiDi.IS:
+		case DiDi.LO:case DiDi.LT:case DiDi.PN:case DiDi.SH:case DiDi.SL:
+		case DiDi.SS:case DiDi.ST:case DiDi.TM:case DiDi.UI:case DiDi.UL:
+		case DiDi.US:case DiDi.OF:case DiDi.QQ:case DiDi.OX:case DiDi.DL:
+		case DiDi.XX:{
 			setVL(is.getShort());
-		}
-		else {
+		}break;
+		default:{
 			short l_vl = (short)is.getShort();
 			int vl = getVR()<<16 + l_vl;
-			setVL(vl);			
+			setVL(vl);	
+		}break;
 		}
 		
 		byte[] values = new byte[getVL()];
@@ -62,7 +74,7 @@ public class DiDataElement {
 			values[i] = (byte)is.read();
 		setValues(values);
 			
-	}
+}
 
 	/**
 	 * Converts the DiDataElement to a human readable string.
