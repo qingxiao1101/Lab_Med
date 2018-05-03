@@ -38,27 +38,35 @@ public class DiFile {
 	 */
 	public void initFromFile(String file_name) throws Exception {
 		// exercise 1
+		/*
 		  _w= 0x00280010;
 		  _h= 0x00280010;
 		  _bits_stored= 0x00280100;
 		  _bits_allocated= 0x00280101;
 		  _image_number= 0x00200013;
+		  */
 		  _file_name=file_name;
 		  DiFileInputStream Input = new DiFileInputStream(file_name);
-		  boolean s = Input.skipHeader();
-		  if(s)
-		  {
-		 	DiDataElement DE = new DiDataElement();
+		  if(Input.skipHeader())
+		  {		 	
+		 	int tag;
 		   do 
-		   {		    						
-		    DE.readNext(Input);		    
-		    System.out.println(DE.getTagString());			    
-		     //_data_elements.put(DE.getTag(),this.getElement(DE.getTag()) );
+		   {		    	
+			DiDataElement DE = new DiDataElement();			
+		    DE.readNext(Input);	
+		    tag = DE.getTag();
+		    _data_elements.put(DE.getTag(),DE);
 		   }
-		   while(DE.getTag() != 0x7FE00010); 
+		   while(tag != 0x7FE00010); 
 		   Input.close();
-		  }
-		  
+		   _w = getElement(0x00280011).getValueAsInt();
+		   _h = getElement(0x00280010).getValueAsInt();
+		   _bits_allocated = getElement(0x00280100).getValueAsInt();
+		   _bits_stored = getElement(0x00280101).getValueAsInt();
+		   _image_number = getElement(0x00200013).getValueAsInt();		   
+		   System.out.println(getElement(0x00200013).toString());
+		   System.out.println(getImageNumber());
+		  }		  
 	}
 
 	/**
