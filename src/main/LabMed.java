@@ -68,19 +68,12 @@ public class LabMed {
 	 */
 	public static void main(String[] args) throws Exception {				
 		String filename = "./CTHd010";
-		try {
-			DiFile test = new DiFile();
-			test.initFromFile(filename);
-			/*
-			DiFileInputStream diFile = new DiFileInputStream(filename);
-			if(diFile.skipHeader())
-				System.out.println("ja");
-			System.out.println("now location is:" + diFile.get_location());
-			*/
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
+		DiFile test = new DiFile();
+		test.initFromFile(filename);
+		//System.out.println(test.getElement(0x00200000).toString());
+		//System.out.println(test.getImageNumber());
+	
 		
 		/*	
 		// the global image stack

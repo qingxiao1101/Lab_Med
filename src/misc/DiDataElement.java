@@ -37,13 +37,13 @@ public class DiDataElement {
 		setGroupID(is.getShort());
 		setElementID(is.getShort());
 		//--------------------
-		int vr_ = is.getShort();
+		int vr,vr_ = is.getShort();
 		int low,high;
 		high = (vr_ >> 8) & 0x00ff;
 		low = vr_ & 0x00ff;
-		vr_ = low<<8 | high;
+		vr = low<<8 | high;
 		//--------------------
-		setVR(vr_);
+		setVR(vr);
 		//System.out.println(getVRString());
 		//System.out.println(getTagString());
 		//System.out.println(Integer.toHexString(low));
@@ -64,8 +64,10 @@ public class DiDataElement {
 		}break;
 		default:{
 			short l_vl = (short)is.getShort();
-			int vl = getVR()<<16 + l_vl;
+			//System.out.println("kommt hier");
+			int vl = vr<<16 + l_vl;
 			setVL(vl);	
+			setVR(0);
 		}break;
 		}
 		

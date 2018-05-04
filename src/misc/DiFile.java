@@ -49,13 +49,16 @@ public class DiFile {
 		  DiFileInputStream Input = new DiFileInputStream(file_name);
 		  if(Input.skipHeader())
 		  {		 	
-		 	int tag;
+			  int tag;	
+			  //System.out.println("ha");
 		   do 
 		   {		    	
-			DiDataElement DE = new DiDataElement();			
-		    DE.readNext(Input);	
-		    tag = DE.getTag();
-		    _data_elements.put(DE.getTag(),DE);
+			   DiDataElement DE = new DiDataElement();			
+			   DE.readNext(Input);
+			   System.out.println(DE.toString());
+			   
+			   tag = DE.getTag();
+			   _data_elements.put(DE.getTag(),DE);
 		   }
 		   while(tag != 0x7FE00010); 
 		   Input.close();
@@ -64,8 +67,8 @@ public class DiFile {
 		   _bits_allocated = getElement(0x00280100).getValueAsInt();
 		   _bits_stored = getElement(0x00280101).getValueAsInt();
 		   _image_number = getElement(0x00200013).getValueAsInt();		   
-		   System.out.println(getElement(0x00200013).toString());
-		   System.out.println(getImageNumber());
+		   //System.out.println(getElement(0x00200013).toString());
+		   //System.out.println(getImageNumber());
 		  }		  
 	}
 
