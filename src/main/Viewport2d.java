@@ -35,6 +35,13 @@ public class Viewport2d extends Viewport implements Observer {
 	// width and heigth of our images. dont mix those with
 	// Viewport2D width / height or Panel2d width / height!
 	private int _w, _h;
+	/**
+	 * add some new variable in aufgabe2
+	 */
+	private int _viewmodel;
+	private final int TRANSVERSAL = 0;
+	private final int SAGITTAL = 1;
+	private final int FRONTAL = 2;
 
 	/**
 	 * Private class, implementing the GUI element for displaying the 2d data.
@@ -119,7 +126,7 @@ public class Viewport2d extends Viewport implements Observer {
 	 */
 	public Viewport2d() {
 		super();
-		
+		//_viewmodel = TRANSVERSAL;  // edition in exercise 2
 		_slice_names = new DefaultListModel<String>();
 		_slice_names.addElement(" ----- ");
 
@@ -180,12 +187,6 @@ public class Viewport2d extends Viewport implements Observer {
 		if (_bg_img==null || _bg_img.getWidth(null)!=_w || _bg_img.getHeight(null)!=_h) {
 			reallocate();
 		}
-		else {			
-			_w = active_file.getImageWidth();
-			_h = active_file.getImageHeight();
-			_bg_img = new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);
-		}
-
 		// rendering the background picture
 		if (_show_bg) { //父类里已经初始化为1
 			// this is the place for the code displaying a single DICOM image
@@ -196,45 +197,20 @@ public class Viewport2d extends Viewport implements Observer {
 			//                                AARRGGBB
 			// the resulting image will be used in the Panel2d::paint() method
 			//active_file.getElement(0x00280004).getValueAsString()=="MONOCHROME2"
+						
 			if(true) {
 				//System.out.println(active_file.getElement(0x00280004).getValueAsString());
-				int bits_allocated = active_file.getElement(0x00280100).getValueAsInt();
-				int bits_stored = active_file.getElement(0x00280101).getValueAsInt();
-				int high_bit = active_file.getElement(0x00280102).getValueAsInt();
-				int intercept = active_file.getElement(0x00281052).getValueAsInt();
-				int slope = active_file.getElement(0x00281053).getValueAsInt();
-				
-				byte[] buffer1 = new byte[(bits_allocated/8)*_w*_h];
-				buffer1 = active_file.getElement(0x7FE00010).getValues();
-				int[] buffer2 = new int[_w*_h];
-				int it = 0;
-				for(int i=0;i<buffer2.length;i++) {
-					buffer2[i] = (int)(buffer1[it+1] << 8) + (int)(buffer1[it]);
-					buffer2[i] = slope*buffer2[i] + intercept; //skalierung
-					it += 2;
-				}
-				int max = 2<<high_bit;
-				//int w_min = 0,w_max=255;
-				int w_width = (slope*max)/256;
-				int w_min = -intercept;
-				
-				byte[] grau_b = new byte[buffer2.length];
-				int[] grau_i = new int[buffer2.length];
-				int[] pixel = new int[grau_i.length];
-				for(int i=0;i<buffer2.length;i++) {
-					grau_b[i] = (byte)((buffer2[i] -w_min)/w_width);
-					grau_i[i] = (int)(grau_b[i] & 0xff);
-					pixel[i] = (0xff<<24) + (grau_i[i]<<16) + (grau_i[i]<<8) + grau_i[i];
-				}
-				
-				
-				final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
-				for (int i=0; i<bg_pixels.length; i++) {
-					bg_pixels[i] = pixel[i];
+				switch(_viewmodel) {
+				case TRANSVERSAL: 
+					modusTransversal(); break;
+				case SAGITTAL:
+					modusSagittal(); break;
+				case FRONTAL:
+					modusFrontal(); break;
+				default: break;		
 				}
 			}
-			
-			
+						
 		} else {
 			// faster: access the data array directly (see below)
 			final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
@@ -354,9 +330,95 @@ public class Viewport2d extends Viewport implements Observer {
 	 * This method will be implemented in exercise 2.
 	 * 
 	 * @param mode the new viewmode
+	 * update by Qing
 	 */
 	public void setViewMode(int mode) {
 		// you should do something with the new viewmode here
-		System.out.println("Viewmode "+mode);
+		//System.out.println("Viewmode "+mode);
+		switch(mode) {
+		case 0:
+			_viewmodel = TRANSVERSAL;break;
+		case 1:
+			_viewmodel = SAGITTAL;break;
+		case 2:
+			_viewmodel = FRONTAL;break;
+		default:break;
+		}		
+		update_view();
+	}
+	/**
+	 * set different model
+	 * @author xiaoqing
+	 */
+	public void modusTransversal() {
+		System.out.println("Viewmode "+"Transversal");
+		
+		int active_img_id = _slices.getActiveImageID();
+		DiFile active_file = _slices.getDiFile(active_img_id);
+			
+		_w = active_file.getImageWidth();
+		_h = active_file.getImageHeight();
+		_bg_img = new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);
+		
+		int bits_allocated = active_file.getElement(0x00280100).getValueAsInt();
+		int bits_stored = active_file.getElement(0x00280101).getValueAsInt();
+		int high_bit = active_file.getElement(0x00280102).getValueAsInt();
+		int intercept = active_file.getElement(0x00281052).getValueAsInt();
+		int slope = active_file.getElement(0x00281053).getValueAsInt();
+		
+		byte[] buffer1 = new byte[(bits_allocated/8)*_w*_h];
+		buffer1 = active_file.getElement(0x7FE00010).getValues();
+		int[] buffer2 = new int[_w*_h];
+		int it = 0;
+		for(int i=0;i<buffer2.length;i++) {
+			buffer2[i] = (int)(buffer1[it+1] << 8) + (int)(buffer1[it]);
+			buffer2[i] = slope*buffer2[i] + intercept; //skalierung
+			it += 2;
+		}
+		int max = 2<<high_bit;
+		//int w_min = 0,w_max=255;
+		int w_width = (slope*max)/256;
+		int w_min = -intercept;
+		
+		byte[] grau_b = new byte[buffer2.length];
+		int[] grau_i = new int[buffer2.length];
+		int[] pixel = new int[grau_i.length];
+		for(int i=0;i<buffer2.length;i++) {
+			grau_b[i] = (byte)((buffer2[i] -w_min)/w_width);
+			grau_i[i] = (int)(grau_b[i] & 0xff);
+			pixel[i] = (0xff<<24) + (grau_i[i]<<16) + (grau_i[i]<<8) + grau_i[i];
+		}
+				
+		final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
+		for (int i=0; i<bg_pixels.length; i++) {
+			bg_pixels[i] = pixel[i];
+		}		
+	}
+	
+	public void modusSagittal() {
+		System.out.println("Viewmode "+"Frontal");
+
+		DiFile first_file = _slices.getDiFile(0);
+		_w = first_file.getImageHeight();
+		_h = _slices.getNumberOfImages();
+		_bg_img = new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);	
+		
+		final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
+		for (int i=0; i<bg_pixels.length; i++) {
+			bg_pixels[i] = 0xff000000;
+		}
+	}
+	public void modusFrontal() {
+		System.out.println("Viewmode "+"Frontal");
+		
+		DiFile first_file = _slices.getDiFile(0);
+		_w = first_file.getImageWidth();
+		_h = _slices.getNumberOfImages();
+		_bg_img = new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);
+		
+		final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
+		for (int i=0; i<bg_pixels.length; i++) {
+			bg_pixels[i] = 0xffffffff;
+		}
 	}
 }
