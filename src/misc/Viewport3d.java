@@ -34,13 +34,13 @@ public class Viewport3d extends Viewport implements Observer  {
 			setMaximumSize(new Dimension(DEF_WIDTH,DEF_HEIGHT));
 			setPreferredSize(new Dimension(DEF_WIDTH,DEF_HEIGHT));
 			setBackground(Color.black);
-
-	        super.getView().setTransparencySortingPolicy(View.TRANSPARENCY_SORT_GEOMETRY);          
+	                  
 
 			_simple_u = new SimpleUniverse(this);
 		    _simple_u.getViewingPlatform().setNominalViewingTransform();
 		    _scene = null;
 		    createScene();
+		    super.getView().setTransparencySortingPolicy(View.TRANSPARENCY_SORT_GEOMETRY);
 		}
 	 
 		public void createScene() {

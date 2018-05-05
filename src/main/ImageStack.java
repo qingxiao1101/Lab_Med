@@ -51,10 +51,10 @@ public class ImageStack extends Observable {
 		_dir_name = dir_name;
 		_w = 0;
 		_h = 0;
-
+		
 		// loading thread
 		Thread t = new Thread() {
-			JProgressBar progress_bar;
+			JProgressBar progress_bar; //进度条
 			
 			// returns the image number of a dicom file or -1 if something wents wrong
 			private int check_file(File file) {
@@ -81,7 +81,7 @@ public class ImageStack extends Observable {
 			public void run() {
 				Hashtable<Integer, String> map_number_to_difile_name = new Hashtable<Integer, String>();
 				DiFile df;
-
+				
 				setChanged();				
 			    notifyObservers(new Message(Message.M_CLEAR));
 
@@ -91,18 +91,19 @@ public class ImageStack extends Observable {
 				
 				File dir = new File(_dir_name);
 			    File[] files_unchecked = dir.listFiles();
-
+			    
 				progress_bar = new JProgressBar(0, files_unchecked.length);
 				progress_bar.setValue(0);
 				progress_bar.setStringPainted(true);
+				
 				progress_win.add(progress_bar);
-				progress_win.pack();
+				
+				progress_win.pack();  			
 				// progress_bar.setIndeterminate(true);
 				int main_width = (int)(LabMed.get_window().getSize().getWidth());
 				int main_height = (int)(LabMed.get_window().getSize().getHeight());
 				progress_win.setLocation((main_width-progress_win.getSize().width)/2, (main_height-progress_win.getSize().height)/2);
 				progress_win.setVisible(true);		
-								
 			    for (int i=0; i<files_unchecked.length; i++) {
 			    	int num = check_file(files_unchecked[i]);
 			    	if (num >= 0) {
@@ -124,7 +125,7 @@ public class ImageStack extends Observable {
 		        Iterator<Integer> it = l.iterator();
 		        int file_counter = 0;
 		        while (it.hasNext()) {
-		        	file_names[file_counter++] =  map_number_to_difile_name.get(it.next());
+		        	file_names[file_counter++] =  map_number_to_difile_name.get(it.next());		       	
 		        }
 		        
 				progress_bar.setMaximum(file_names.length);
@@ -157,7 +158,7 @@ public class ImageStack extends Observable {
 			}
 		};
 		
-		t.start();	    
+		t.start();
 	}
 
 	/**

@@ -55,7 +55,8 @@ public class DiFile {
 		   {		    	
 			   DiDataElement DE = new DiDataElement();			
 			   DE.readNext(Input);
-			   System.out.println(DE.toString());
+			   
+			   //System.out.println(DE.toString());
 			   
 			   tag = DE.getTag();
 			   _data_elements.put(DE.getTag(),DE);

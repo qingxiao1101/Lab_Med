@@ -47,7 +47,7 @@ public class MainWindow extends JFrame implements ComponentListener {
 
 		ToolPane tools = new ToolPane();
 		
-		GridBagConstraints c = new GridBagConstraints();		
+		GridBagConstraints c = new GridBagConstraints();	//显示组件	
 
 		// Label
 		c.insets = new Insets(2,10,2,2); //top,left,bottom,right

@@ -88,7 +88,7 @@ public class Viewport2d extends Viewport implements Observer {
 		 */
 		public ImageSelector() {
 			_jl_slices = new JList<String>(_slice_names);
-
+			//添加图片列表选择监听器
 			_jl_slices.setSelectedIndex(0);
 			_jl_slices.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			_jl_slices.addListSelectionListener(new ListSelectionListener(){
@@ -103,7 +103,7 @@ public class Viewport2d extends Viewport implements Observer {
 			       	}
 				 }
 			});
-			
+			//列表滚动
 			_jsp_scroll = new JScrollPane(_jl_slices);			
 			_jsp_scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 			_jsp_scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -132,10 +132,10 @@ public class Viewport2d extends Viewport implements Observer {
 		_img_sel = new ImageSelector();
 
 		setLayout( new BorderLayout() );
-		_panel2d = new Panel2d();		
+		_panel2d = new Panel2d();	//显示2d坐标位置数据	鼠标监听
         add(_panel2d, BorderLayout.CENTER );        
         add(_img_sel, BorderLayout.EAST );
-		setPreferredSize(new Dimension(DEF_WIDTH+50,DEF_HEIGHT));
+		setPreferredSize(new Dimension(DEF_WIDTH+50,DEF_HEIGHT)); //设置首选尺寸
 	}
 
 
@@ -170,18 +170,24 @@ public class Viewport2d extends Viewport implements Observer {
 	public void update_view() {
 		if (_slices.getNumberOfImages() == 0)
 			return;
-
+		
 		// these are two variables you might need in exercise #2
 		// int active_img_id = _slices.getActiveImageID();
 		// DiFile active_file = _slices.getDiFile(active_img_id);
-
+		int active_img_id = _slices.getActiveImageID();
+		DiFile active_file = _slices.getDiFile(active_img_id);
 		// _w and _h need to be initialized BEFORE filling the image array !
 		if (_bg_img==null || _bg_img.getWidth(null)!=_w || _bg_img.getHeight(null)!=_h) {
 			reallocate();
 		}
+		else {			
+			_w = active_file.getImageWidth();
+			_h = active_file.getImageHeight();
+			_bg_img = new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);
+		}
 
 		// rendering the background picture
-		if (_show_bg) {
+		if (_show_bg) { //父类里已经初始化为1
 			// this is the place for the code displaying a single DICOM image
 			// in the 2d viewport (exercise 2)
 			//
@@ -189,6 +195,46 @@ public class Viewport2d extends Viewport implements Observer {
 			// example: _bg_img.setRGB(x,y, 0xff00ff00)
 			//                                AARRGGBB
 			// the resulting image will be used in the Panel2d::paint() method
+			//active_file.getElement(0x00280004).getValueAsString()=="MONOCHROME2"
+			if(true) {
+				//System.out.println(active_file.getElement(0x00280004).getValueAsString());
+				int bits_allocated = active_file.getElement(0x00280100).getValueAsInt();
+				int bits_stored = active_file.getElement(0x00280101).getValueAsInt();
+				int high_bit = active_file.getElement(0x00280102).getValueAsInt();
+				int intercept = active_file.getElement(0x00281052).getValueAsInt();
+				int slope = active_file.getElement(0x00281053).getValueAsInt();
+				
+				byte[] buffer1 = new byte[(bits_allocated/8)*_w*_h];
+				buffer1 = active_file.getElement(0x7FE00010).getValues();
+				int[] buffer2 = new int[_w*_h];
+				int it = 0;
+				for(int i=0;i<buffer2.length;i++) {
+					buffer2[i] = (int)(buffer1[it+1] << 8) + (int)(buffer1[it]);
+					buffer2[i] = slope*buffer2[i] + intercept; //skalierung
+					it += 2;
+				}
+				int max = 2<<high_bit;
+				//int w_min = 0,w_max=255;
+				int w_width = (slope*max)/256;
+				int w_min = -intercept;
+				
+				byte[] grau_b = new byte[buffer2.length];
+				int[] grau_i = new int[buffer2.length];
+				int[] pixel = new int[grau_i.length];
+				for(int i=0;i<buffer2.length;i++) {
+					grau_b[i] = (byte)((buffer2[i] -w_min)/w_width);
+					grau_i[i] = (int)(grau_b[i] & 0xff);
+					pixel[i] = (0xff<<24) + (grau_i[i]<<16) + (grau_i[i]<<8) + grau_i[i];
+				}
+				
+				
+				final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
+				for (int i=0; i<bg_pixels.length; i++) {
+					bg_pixels[i] = pixel[i];
+				}
+			}
+			
+			
 		} else {
 			// faster: access the data array directly (see below)
 			final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
@@ -271,6 +317,8 @@ public class Viewport2d extends Viewport implements Observer {
 		}
 	  }
 
+	
+	
     /**
 	 * Returns the current file.
 	 * 

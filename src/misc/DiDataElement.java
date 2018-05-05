@@ -36,21 +36,28 @@ public class DiDataElement {
 
 		setGroupID(is.getShort());
 		setElementID(is.getShort());
+		int b0 = is.getByte();
+		int b1 = is.getByte();
+		int vr = (b0 << 8) + b1;
+		
 		//--------------------
+		/*
 		int vr,vr_ = is.getShort();
 		int low,high;
 		high = (vr_ >> 8) & 0x00ff;
 		low = vr_ & 0x00ff;
 		vr = low<<8 | high;
+		*/
 		//--------------------
-		setVR(vr);
+		//setVR(vr);
 		//System.out.println(getVRString());
 		//System.out.println(getTagString());
 		//System.out.println(Integer.toHexString(low));
 		//System.out.println(Integer.toHexString(high));
 		//System.out.println(Integer.toHexString(is.getShort()));	
-		switch(getVR()) {
+		switch(vr) {
 		case DiDi.OB: case DiDi.OW:case DiDi.SQ:case DiDi.UT:case DiDi.UN:{
+			setVR(vr);
 			is.getShort();
 			setVL(is.getInt());
 		}break;		
@@ -60,14 +67,14 @@ public class DiDataElement {
 		case DiDi.SS:case DiDi.ST:case DiDi.TM:case DiDi.UI:case DiDi.UL:
 		case DiDi.US:case DiDi.OF:case DiDi.QQ:case DiDi.OX:case DiDi.DL:
 		case DiDi.XX:{
+			setVR(vr);
 			setVL(is.getShort());
 		}break;
 		default:{
-			short l_vl = (short)is.getShort();
-			//System.out.println("kommt hier");
-			int vl = vr<<16 + l_vl;
-			setVL(vl);	
-			setVR(0);
+			int b2 = is.getByte();
+			int b3 = is.getByte();
+			int vl = (b3<<24) + (b2<<16) + (b1<<8) + b0;
+			setVL(vl);				
 		}break;
 		}
 		

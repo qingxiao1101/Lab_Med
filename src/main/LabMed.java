@@ -66,16 +66,8 @@ public class LabMed {
 	 * @param args currently no program specific arguments
 	 * @throws Exception 
 	 */
-	public static void main(String[] args) throws Exception {				
-		String filename = "./CTHd010";
+	public static void main(String[] args) throws Exception {							
 		
-		DiFile test = new DiFile();
-		test.initFromFile(filename);
-		//System.out.println(test.getElement(0x00200000).toString());
-		//System.out.println(test.getImageNumber());
-	
-		
-		/*	
 		// the global image stack
 		_is = ImageStack.getInstance(); 		
 		_v2d = new Viewport2d();	
@@ -83,8 +75,11 @@ public class LabMed {
 		// the viewports need to update when the global image stack data changes
 		_is.addObserver(_v2d);
 		_is.addObserver(_v3d);
-		_win = new MainWindow("LabMed 2013", _v2d, _v3d);
+		_win = new MainWindow("LabMed 2018", _v2d, _v3d);
 		_win.setVisible(true);
-		*/
+		//_win.setVisible(false);
+		//_is.initFromDirectory("./ct_head_ex/");
+		
+		
 	}
 }
