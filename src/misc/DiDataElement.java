@@ -33,28 +33,13 @@ public class DiDataElement {
 	 */
 	public void readNext(DiFileInputStream is) throws Exception {
     	// exercise 1
-
 		setGroupID(is.getShort());
 		setElementID(is.getShort());
 		int b0 = is.getByte();
 		int b1 = is.getByte();
 		int vr = (b0 << 8) + b1;
 		
-		//--------------------
-		/*
-		int vr,vr_ = is.getShort();
-		int low,high;
-		high = (vr_ >> 8) & 0x00ff;
-		low = vr_ & 0x00ff;
-		vr = low<<8 | high;
-		*/
-		//--------------------
-		//setVR(vr);
-		//System.out.println(getVRString());
-		//System.out.println(getTagString());
-		//System.out.println(Integer.toHexString(low));
-		//System.out.println(Integer.toHexString(high));
-		//System.out.println(Integer.toHexString(is.getShort()));	
+		
 		switch(vr) {
 		case DiDi.OB: case DiDi.OW:case DiDi.SQ:case DiDi.UT:case DiDi.UN:{
 			setVR(vr);
@@ -72,18 +57,20 @@ public class DiDataElement {
 		}break;
 		default:{
 			int b2 = is.getByte();
-			int b3 = is.getByte();
+			int b3 = is.getByte();			
 			int vl = (b3<<24) + (b2<<16) + (b1<<8) + b0;
 			setVL(vl);				
 		}break;
 		}
-		
+		//System.out.print(getTagString()+"  VL: ");
+		//System.out.println(getVL());
 		byte[] values = new byte[getVL()];
 		for(int i=0;i<getVL();i++)
 			values[i] = (byte)is.read();
 		setValues(values);
 			
 }
+
 
 	/**
 	 * Converts the DiDataElement to a human readable string.
@@ -190,6 +177,40 @@ public class DiDataElement {
 	}
 	
 	/**
+	 * exercise 1
+	 * @return
+	 */
+	public int getValueAsIntIm() {
+		String str = getValueAsStringIm();
+		return Integer.parseInt(str.trim());										
+	}
+	/**
+	 * exercise 1
+	 * @return
+	 */
+	public String getValueAsStringIm() {
+		int tag = getTag();
+		String str = new String();
+		byte[] buf = getValues();
+		
+		if(tag==0x00280002||tag==0x00280010||tag==0x00280011||tag==0x00280100||
+				tag==0x00280101||tag==0x00280102||tag==0x00280103) { //US 
+			int tmp = ((_values[1] & 0xFF)<<8 | (_values[0] & 0xFF));
+			str = ""+tmp;
+		}else if(tag==0x00200011||tag==0x00200012||tag==0x00200013|| //IS
+				tag==0x00281053||tag==0x00281052||tag==0x00280030||tag==0x00201041||tag==0x00200037||tag==0x00200032) { //DS
+			for (int i=0; i<_vl; i++) {
+				if (_values[i]>0) {
+					str += ((char)(_values[i]));
+				}
+			}
+			
+		}
+		else 
+			str = "I do not want to display this data type!!!";
+		return str;
+	}
+	/**
 	 * Returns the value as a string value.
 	 * TODO: support for OB
 	 *  
@@ -238,8 +259,8 @@ public class DiDataElement {
 			for (int i=0; i<_vl; i++) {
 				str+=((int)(_values[i])+"|");
 			}
+			
 		}
-
 		return str;
 	}
 	

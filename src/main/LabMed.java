@@ -66,7 +66,12 @@ public class LabMed {
 	 * @param args currently no program specific arguments
 	 * @throws Exception 
 	 */
-	public static void main(String[] args) throws Exception {							
+	public static void main(String[] args) throws Exception {	
+		/*
+		DiFile test = new DiFile();
+		test.initFromFile("./CTHd010im");
+		*/
+		
 		
 		// the global image stack
 		_is = ImageStack.getInstance(); 		
@@ -78,7 +83,6 @@ public class LabMed {
 		_win = new MainWindow("LabMed 2018", _v2d, _v3d);
 		_win.setVisible(true);
 		//_win.setVisible(false);
-		//_is.initFromDirectory("./ct_head_ex/");
 		
 		
 	}

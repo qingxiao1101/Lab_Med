@@ -61,19 +61,19 @@ public class ImageStack extends Observable {
 				int result = -1;
 				
 				if (!file.isDirectory()) {
-		        	try {
+		        	try {		        		
 		        		DiFileInputStream candidate = new DiFileInputStream(file);
 		        		
 			    		if (candidate.skipHeader()) {
 			    			result = candidate.quickscan_for_image_number();
 			    		}				    	
 						candidate.close();
+						
 		    		} catch (Exception ex) {
 						System.out.println("this will work after exercise 1");
 		    			result = -1;
 		    		}
-				}
-				
+				}				
 	            return result;
 			}
 			
@@ -94,7 +94,7 @@ public class ImageStack extends Observable {
 			    
 				progress_bar = new JProgressBar(0, files_unchecked.length);
 				progress_bar.setValue(0);
-				progress_bar.setStringPainted(true);
+				progress_bar.setStringPainted(true); //
 				
 				progress_win.add(progress_bar);
 				
@@ -273,5 +273,68 @@ public class ImageStack extends Observable {
 		setChanged();
 	    notifyObservers(new Message(Message.M_NEW_ACTIVE_IMAGE, new Integer(i)));
 	}
+	
+	//////////
+	/**
+	 * sagittal model aufgabe2.2
+	 * @author qing
+	 */
+	public void initSagittal() {
+		if(this.getNumberOfImages()==0)
+			return;
+		
+		//getSagittalBild();
+		Thread t = new Thread() {
+			JProgressBar progress_bar;
+			public void run() {
+				
+				setChanged();				
+			    notifyObservers(new Message(Message.M_CLEAR));
+				
+				JFrame progress_win = new JFrame("checking ...");
+				progress_win.setResizable(false);
+				progress_win.setAlwaysOnTop(true);
+				
+				progress_bar = new JProgressBar(0, 256);
+				progress_bar.setValue(0);
+				progress_bar.setStringPainted(true); //
+				
+				progress_win.add(progress_bar);
+				
+				progress_win.pack();  	
+				
+				int main_width = (int)(LabMed.get_window().getSize().getWidth());
+				int main_height = (int)(LabMed.get_window().getSize().getHeight());
+				progress_win.setLocation((main_width-progress_win.getSize().width)/2, (main_height-progress_win.getSize().height)/2);
+				progress_win.setVisible(true);
+				
+				progress_bar.setMaximum(256);
+				progress_bar.setValue(0);
+				
+				for(int i=0;i<256;i++) {
+					progress_bar.setValue(i);
+					
+					setChanged();				
+					notifyObservers(new Message(Message.M_NEW_IMAGE_LOADED));
+				}
+				progress_win.setVisible(false);
+				
+			}			
+		};
+		t.start();
+	}
+	public void initFrontal() {
+		if(this.getNumberOfImages()==0)
+			return;
+		//getSagittalBild();
+		Thread t = new Thread() {
+		//JProgressBar progress_bar;
+		public void run() {
+							
+		}			
+		};
+		t.start();
+	}
+	
 }
 

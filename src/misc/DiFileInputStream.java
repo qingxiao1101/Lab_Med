@@ -146,8 +146,8 @@ public class DiFileInputStream extends FileInputStream {
 
     	
     }
-    
-    
+ 
+
     /**
      * Returns the image number (from tag 0020,0013) or -1 if the file did not
      * contain an image number. Can throw an exception if the stream was no valid
@@ -158,14 +158,25 @@ public class DiFileInputStream extends FileInputStream {
      */
     public int quickscan_for_image_number() throws Exception {
     	DiDataElement de = new DiDataElement();
-    	
+    	int file_type = 1;
 		do  {
 			de.readNext(this);
+			if(de.getTag()==0x00020010) {
+				if (de.getValueAsString().length() > 18) {
+					file_type = 1;  //ex file
+				}						
+				else {
+					file_type = 0; //im file
+				}						
+		   }
 		} while (de.getTag()<0x00200013);
-    	
-		return de.getValueAsInt();
+		if(file_type==1)
+			return de.getValueAsInt();
+		else
+			return de.getValueAsIntIm();
     }
     
+	
     /**
      * Returns the current location (= number of bytes read) of the stream.
      * @return
@@ -182,5 +193,6 @@ public class DiFileInputStream extends FileInputStream {
     public void set_little_endian(boolean little_endian) {
     	_little_endian = little_endian;
     }
+    
 }
 

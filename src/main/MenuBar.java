@@ -251,7 +251,7 @@ public class MenuBar extends JMenuBar {
 			if (name.equals("Transversal")) {
 				_v2d.setViewMode(0);
 			} else if (name.equals("Sagittal")) {
-				_v2d.setViewMode(1);
+				_v2d.setViewMode(1);				
 			} else if (name.equals("Frontal")) {
 				_v2d.setViewMode(2);
 			}

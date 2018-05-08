@@ -336,41 +336,46 @@ public class Viewport2d extends Viewport implements Observer {
 		// you should do something with the new viewmode here
 		//System.out.println("Viewmode "+mode);
 		switch(mode) {
-		case 0:
-			_viewmodel = TRANSVERSAL;break;
-		case 1:
-			_viewmodel = SAGITTAL;break;
-		case 2:
-			_viewmodel = FRONTAL;break;
+		case 0:{
+			_viewmodel = TRANSVERSAL;
+		}break;			
+		case 1:{
+			_viewmodel = SAGITTAL;
+			//LabMed.get_is().initSagittal(); //add in exercise 2 
+		}break;			 
+		case 2:{
+			_viewmodel = FRONTAL;
+			//LabMed.get_is().initFrontal();	//add in exercise 2
+		}break;			
 		default:break;
-		}		
+		}
+		
 		update_view();
 	}
 	/**
 	 * set different model
-	 * @author xiaoqing
+	 * @author qing
 	 */
 	public void modusTransversal() {
 		System.out.println("Viewmode "+"Transversal");
-		
 		int active_img_id = _slices.getActiveImageID();
 		DiFile active_file = _slices.getDiFile(active_img_id);
 			
-		_w = active_file.getImageWidth();
-		_h = active_file.getImageHeight();
+		_h = active_file.getImageWidth();
+		_w = active_file.getImageHeight();
 		_bg_img = new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);
-		
-		int bits_allocated = active_file.getElement(0x00280100).getValueAsInt();
-		int bits_stored = active_file.getElement(0x00280101).getValueAsInt();
-		int high_bit = active_file.getElement(0x00280102).getValueAsInt();
-		int intercept = active_file.getElement(0x00281052).getValueAsInt();
-		int slope = active_file.getElement(0x00281053).getValueAsInt();
+		//int file_type = active_file.getFileType();
+		int bits_allocated = active_file.getBitsAllocated();
+		int bits_stored = active_file.getBitsStored();
+		int high_bit =active_file.getHighBit();
+		int intercept=active_file.getIntercept();
+		int slope=active_file.getSlope();
 		
 		byte[] buffer1 = new byte[(bits_allocated/8)*_w*_h];
 		buffer1 = active_file.getElement(0x7FE00010).getValues();
 		int[] buffer2 = new int[_w*_h];
 		int it = 0;
-		for(int i=0;i<buffer2.length;i++) {
+		for(int i=0;i<(buffer1.length)/2;i++) {
 			buffer2[i] = (int)(buffer1[it+1] << 8) + (int)(buffer1[it]);
 			buffer2[i] = slope*buffer2[i] + intercept; //skalierung
 			it += 2;
@@ -397,7 +402,9 @@ public class Viewport2d extends Viewport implements Observer {
 	
 	public void modusSagittal() {
 		System.out.println("Viewmode "+"Frontal");
-
+		for(int i=0;i<20;i++)
+			_slice_names.addElement("i");
+		
 		DiFile first_file = _slices.getDiFile(0);
 		_w = first_file.getImageHeight();
 		_h = _slices.getNumberOfImages();
