@@ -21,6 +21,7 @@ public class DiDataElement {
 		_vl = 0;
 		_vr = 0;
 		_values = null;
+		//DiDi.getVR()
 	}
 
 	/**
@@ -33,40 +34,49 @@ public class DiDataElement {
 	 */
 	public void readNext(DiFileInputStream is) throws Exception {
     	// exercise 1
-		setGroupID(is.getShort());
-		setElementID(is.getShort());
+		int id = is.getShort();
+		int eid = is.getShort();
+		setGroupID(id);
+		setElementID(eid);		
+		int tag = (id << 16) + eid;
+		//System.out.println(Integer.toHexString(tag));
 		int b0 = is.getByte();
 		int b1 = is.getByte();
 		int vr = (b0 << 8) + b1;
-		
-		
+		//System.out.println(vr);		
 		switch(vr) {
 		case DiDi.OB: case DiDi.OW:case DiDi.SQ:case DiDi.UT:case DiDi.UN:{
 			setVR(vr);
 			is.getShort();
 			setVL(is.getInt());
+			
 		}break;		
 		case DiDi.AE:case DiDi.AS:case DiDi.AT:case DiDi.CS:case DiDi.DA:
 		case DiDi.DS:case DiDi.DT:case DiDi.FD:case DiDi.FL:case DiDi.IS:
 		case DiDi.LO:case DiDi.LT:case DiDi.PN:case DiDi.SH:case DiDi.SL:
 		case DiDi.SS:case DiDi.ST:case DiDi.TM:case DiDi.UI:case DiDi.UL:
 		case DiDi.US:case DiDi.OF:case DiDi.QQ:case DiDi.OX:case DiDi.DL:
-		case DiDi.XX:{
+		//case DiDi.XX:
+		{
 			setVR(vr);
 			setVL(is.getShort());
+			
 		}break;
 		default:{
 			int b2 = is.getByte();
 			int b3 = is.getByte();			
 			int vl = (b3<<24) + (b2<<16) + (b1<<8) + b0;
-			setVL(vl);				
+			setVL(vl);						
+			setVR(DiDi.getVR(tag));
+			//if(tag==0x7fe00010) 				
+				//System.out.println(Integer.toHexString(vr));			
 		}break;
-		}
-		//System.out.print(getTagString()+"  VL: ");
-		//System.out.println(getVL());
+		}		
+		//System.out.println(Integer.toHexString(DiDi.getVR(tag)));
 		byte[] values = new byte[getVL()];
-		for(int i=0;i<getVL();i++)
-			values[i] = (byte)is.read();
+		is.read(values);
+		//for(int i=0;i<getVL();i++)
+		//	values[i] = (byte)is.read();
 		setValues(values);
 			
 }
@@ -176,40 +186,6 @@ public class DiDataElement {
 		return Integer.parseInt(str.trim());										
 	}
 	
-	/**
-	 * exercise 1
-	 * @return
-	 */
-	public int getValueAsIntIm() {
-		String str = getValueAsStringIm();
-		return Integer.parseInt(str.trim());										
-	}
-	/**
-	 * exercise 1
-	 * @return
-	 */
-	public String getValueAsStringIm() {
-		int tag = getTag();
-		String str = new String();
-		byte[] buf = getValues();
-		
-		if(tag==0x00280002||tag==0x00280010||tag==0x00280011||tag==0x00280100||
-				tag==0x00280101||tag==0x00280102||tag==0x00280103) { //US 
-			int tmp = ((_values[1] & 0xFF)<<8 | (_values[0] & 0xFF));
-			str = ""+tmp;
-		}else if(tag==0x00200011||tag==0x00200012||tag==0x00200013|| //IS
-				tag==0x00281053||tag==0x00281052||tag==0x00280030||tag==0x00201041||tag==0x00200037||tag==0x00200032) { //DS
-			for (int i=0; i<_vl; i++) {
-				if (_values[i]>0) {
-					str += ((char)(_values[i]));
-				}
-			}
-			
-		}
-		else 
-			str = "I do not want to display this data type!!!";
-		return str;
-	}
 	/**
 	 * Returns the value as a string value.
 	 * TODO: support for OB

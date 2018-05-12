@@ -158,8 +158,8 @@ public class DiFileInputStream extends FileInputStream {
      */
     public int quickscan_for_image_number() throws Exception {
     	DiDataElement de = new DiDataElement();
-    	int file_type = 1;
-		do  {
+    	//int file_type = 1;
+/*		do  {
 			de.readNext(this);
 			if(de.getTag()==0x00020010) {
 				if (de.getValueAsString().length() > 18) {
@@ -174,6 +174,11 @@ public class DiFileInputStream extends FileInputStream {
 			return de.getValueAsInt();
 		else
 			return de.getValueAsIntIm();
+			*/
+    	do  {
+			de.readNext(this);
+		}while (de.getTag()<0x00200013);
+    	return de.getValueAsInt();
     }
     
 	

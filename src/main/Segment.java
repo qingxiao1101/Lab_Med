@@ -92,4 +92,7 @@ public class Segment {
 	public void setColor(int color) {
 		_color = color;
 	}
+	public void create_range_seg(int min,int max, ImageStack slices) {
+		
+	}
 }

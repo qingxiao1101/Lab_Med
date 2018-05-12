@@ -49,12 +49,13 @@ public class DiFile {
 		  _file_name=file_name;
 		  DiFileInputStream Input = new DiFileInputStream(file_name);
 		  if(Input.skipHeader()){			  	 	
-			  int tag=0;	
+			int tag=0;	
 		   do 
 		   {		    	
 			   DiDataElement DE = new DiDataElement();	
 			   
 			   DE.readNext(Input);
+			   /*
 			   if(DE.getTag()==0x00020010) {
 					if (DE.getValueAsString().length() > 18) {
 						//System.out.println("ex file");
@@ -65,40 +66,25 @@ public class DiFile {
 						_file_type = IM; //im file
 					}						
 			   }
-				   
-			   //System.out.print(DE.getTagString());
-			   //System.out.println(DE.toString());
-			   //System.out.println(" VALUE: ");
-			   //DE.getValueAsIntIm();
-			   //System.out.println(" "+DE.getValueAsShortIm());
+				 */
+			   
 			   tag = DE.getTag();
 			   _data_elements.put(DE.getTag(),DE);
+			   //System.out.println(DE.toString());
 		   }
 		   while(tag != 0x7FE00010); 
 		   Input.close();
-		   if(_file_type==EX) { //if ex file
-			   _w = getElement(0x00280011).getValueAsInt();
-			   _h = getElement(0x00280010).getValueAsInt();
-			   _bits_allocated = getElement(0x00280100).getValueAsInt();
-			   _bits_stored = getElement(0x00280101).getValueAsInt();
-			   _image_number = getElement(0x00200013).getValueAsInt();
-			   _high_bit = getElement(0x00280102).getValueAsInt();
-			   _intercept = getElement(0x00281052).getValueAsInt();
-			   _slope = getElement(0x00281053).getValueAsInt();
-		   }else { //if im file
-			   _w = getElement(0x00280011).getValueAsIntIm();
-			   _h = getElement(0x00280010).getValueAsIntIm();
-			   _bits_allocated = getElement(0x00280100).getValueAsIntIm();
-			   _bits_stored = getElement(0x00280101).getValueAsIntIm();
-			   _image_number = getElement(0x00200013).getValueAsIntIm();
-			   _high_bit = getElement(0x00280102).getValueAsIntIm();
-			   _intercept = getElement(0x00281052).getValueAsIntIm();
-			   _slope = getElement(0x00281053).getValueAsIntIm();
-			   
-		   }
-		   //System.out.println("W: "+_w+" H: "+_h +" bit allocated:"+_bits_allocated+" bits_stored "+_bits_stored+" image number:" +_image_number);
-		   //System.out.println(" _high_bit: "+_high_bit+" _intercept: "+_intercept+" _slope: "+_slope);   
-		  }		  
+		   
+		   _w = getElement(0x00280011).getValueAsInt();
+		   _h = getElement(0x00280010).getValueAsInt();
+		   _bits_allocated = getElement(0x00280100).getValueAsInt();
+		   _bits_stored = getElement(0x00280101).getValueAsInt();
+		   _image_number = getElement(0x00200013).getValueAsInt();
+		   _high_bit = getElement(0x00280102).getValueAsInt();
+		   _intercept = getElement(0x00281052).getValueAsInt();
+		   _slope = getElement(0x00281053).getValueAsInt();
+		   
+		}		  
 	}
 
 	/**

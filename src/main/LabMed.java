@@ -67,6 +67,7 @@ public class LabMed {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {	
+		
 		/*
 		DiFile test = new DiFile();
 		test.initFromFile("./CTHd010im");

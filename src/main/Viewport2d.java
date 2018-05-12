@@ -330,7 +330,6 @@ public class Viewport2d extends Viewport implements Observer {
 	 * This method will be implemented in exercise 2.
 	 * 
 	 * @param mode the new viewmode
-	 * update by Qing
 	 */
 	public void setViewMode(int mode) {
 		// you should do something with the new viewmode here
@@ -354,7 +353,7 @@ public class Viewport2d extends Viewport implements Observer {
 	}
 	/**
 	 * set different model
-	 * @author qing
+	 * @author xiao; Tang
 	 */
 	public void modusTransversal() {
 		System.out.println("Viewmode "+"Transversal");
@@ -366,33 +365,36 @@ public class Viewport2d extends Viewport implements Observer {
 		_bg_img = new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);
 		//int file_type = active_file.getFileType();
 		int bits_allocated = active_file.getBitsAllocated();
-		int bits_stored = active_file.getBitsStored();
+		//int bits_stored = active_file.getBitsStored();
 		int high_bit =active_file.getHighBit();
-		int intercept=active_file.getIntercept();
-		int slope=active_file.getSlope();
+		//int intercept=active_file.getIntercept();
+		//int slope=active_file.getSlope();
+		int max = 2<<high_bit;
+		int window_center = max/2;
 		
-		byte[] buffer1 = new byte[(bits_allocated/8)*_w*_h];
-		buffer1 = active_file.getElement(0x7FE00010).getValues();
-		int[] buffer2 = new int[_w*_h];
+		byte[] prime_data = new byte[(bits_allocated/8)*_w*_h];
+		prime_data = active_file.getElement(0x7FE00010).getValues();
+		int[] prime_pixel = new int[_w*_h];
+		int[] scale_pixel = new int[_w*_h];
+		int[] pixel = new int[scale_pixel.length];
 		int it = 0;
-		for(int i=0;i<(buffer1.length)/2;i++) {
-			buffer2[i] = (int)(buffer1[it+1] << 8) + (int)(buffer1[it]);
-			buffer2[i] = slope*buffer2[i] + intercept; //skalierung
+		for(int i=0;i<(prime_data.length)/2;i++) {			
+			prime_pixel[i] = (int)((prime_data[it+1] << 8)) + (int)((prime_data[it]));
+			if(prime_pixel[i]<=(window_center -0.5 - (max-1)/2)) {
+				scale_pixel[i] = 0;
+			}
+			else if(prime_pixel[i] > (window_center -0.5 + (max-1)/2)) {
+				scale_pixel[i] = 255;
+			}
+			else {
+				scale_pixel[i] = (int)(((prime_pixel[i]-(window_center-0.5))/(max-1)+0.5)*(255-0)+0);
+			}
+			pixel[i] = (0xff<<24) + (scale_pixel[i]<<16) + (scale_pixel[i]<<8) + scale_pixel[i];
+			//pixel[i] = (0xff<<24) + (scale_pixel[i]<<16) + (0<<8) + 0;
 			it += 2;
 		}
-		int max = 2<<high_bit;
-		//int w_min = 0,w_max=255;
-		int w_width = (slope*max)/256;
-		int w_min = -intercept;
 		
-		byte[] grau_b = new byte[buffer2.length];
-		int[] grau_i = new int[buffer2.length];
-		int[] pixel = new int[grau_i.length];
-		for(int i=0;i<buffer2.length;i++) {
-			grau_b[i] = (byte)((buffer2[i] -w_min)/w_width);
-			grau_i[i] = (int)(grau_b[i] & 0xff);
-			pixel[i] = (0xff<<24) + (grau_i[i]<<16) + (grau_i[i]<<8) + grau_i[i];
-		}
+		
 				
 		final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
 		for (int i=0; i<bg_pixels.length; i++) {
