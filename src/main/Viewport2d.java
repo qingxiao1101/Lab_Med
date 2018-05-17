@@ -392,20 +392,11 @@ public class Viewport2d extends Viewport implements Observer {
 			prime_pixel = _slices.get_volum_pixel_data(active_img_id);
 		}	break;		
 		case SAGITTAL:{
-			if(_slices.get_sagittal_img().isEmpty())
-				System.out.println("sagittal is empty!");
-			System.out.println("active_img_id : "+active_img_id);
 			prime_pixel = _slices.get_sagittal_img(active_img_id);
-			System.out.println("width: "+_w+"  height: "+_h);
-//			for(int i=0;i<_h;i++) {
-//				for(int j=0;j<_w;j++) {
-//					System.out.print(" "+prime_pixel[i][j]);
-//				}
-//				System.out.println(" ");	
-//			}			
-//			System.out.println("here!!!");
 		}	break;
-
+		case FRONTAL:{
+			prime_pixel = _slices.get_frontal_img(active_img_id);
+		}	break;
 		default:
 			break;
 		}
@@ -473,6 +464,7 @@ public class Viewport2d extends Viewport implements Observer {
 			//bg_pixels[i] = 0xff000000;
 		}
 	}
+	
 	public void modusFrontal() {
 		System.out.println("Viewmode "+"Frontal");
 		
@@ -480,10 +472,10 @@ public class Viewport2d extends Viewport implements Observer {
 		_w = first_file.getImageWidth();
 		_h = _slices.getNumberOfImages();
 		_bg_img = new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);
-		
+		int[] pixel = dataProcess();
 		final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
 		for (int i=0; i<bg_pixels.length; i++) {
-			bg_pixels[i] = 0xffffffff;
+			bg_pixels[i] = pixel[i];
 		}
 	}
 

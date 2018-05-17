@@ -28,6 +28,7 @@ public class ImageStack extends Observable {
 	//for different model
 	private Map<Integer,Integer[][]> _volum_pixel_data;
 	private Vector<Integer[][]> _sagittal_img;
+	private Vector<Integer[][]> _frontal_img;
 	
 	public Integer[][] get_sagittal_img(int i){
 		return _sagittal_img.get(i);
@@ -35,6 +36,13 @@ public class ImageStack extends Observable {
 	public Vector<Integer[][]> get_sagittal_img(){
 		return _sagittal_img;
 	}
+	public Integer[][] get_frontal_img(int i){
+		return _frontal_img.get(i);
+	}
+	public Vector<Integer[][]> get_frontal_img(){
+		return _frontal_img;
+	}
+	
 	public Integer[][] get_volum_pixel_data(int i) {
 		return _volum_pixel_data.get(i);
 	}
@@ -50,6 +58,7 @@ public class ImageStack extends Observable {
 		_active = 0;
 		_volum_pixel_data = new HashMap<Integer, Integer[][]>();
 		_sagittal_img = new Vector<Integer[][]>();
+		_frontal_img = new Vector<Integer[][]>();
 	}
 
 	public static ImageStack getInstance() {
@@ -357,14 +366,26 @@ public class ImageStack extends Observable {
 	public void initFrontal() {
 		if(this.getNumberOfImages()==0)
 			return;
-		//getSagittalBild();
-		Thread t = new Thread() {
-		//JProgressBar progress_bar;
-		public void run() {
-							
-		}			
-		};
-		t.start();
+		setChanged();				
+		notifyObservers(new Message(Message.M_CLEAR));
+		
+		int width = this.getImageWidth();
+		int high = this.getNumberOfImages();
+				
+		for(int h=0;h<this.getImageHeight();h++) {
+			Integer[][] frontal = new Integer[high][width];			
+			
+			for(int layer=0;layer<_volum_pixel_data.size();layer++) {
+				Integer[][] board = _volum_pixel_data.get(layer);
+				for(int i=0;i<width;i++) {
+					frontal[layer][i] = board[i][h];
+				}
+			}
+			_frontal_img.addElement(frontal);
+			
+			setChanged();				
+			notifyObservers(new Message(Message.M_NEW_IMAGE_LOADED));
+		}
 	}
 
 
