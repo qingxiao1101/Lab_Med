@@ -6,6 +6,8 @@ import java.awt.Insets;
 import javax.swing.*;
 import javax.swing.event.*;
 
+import misc.DiFile;
+
 /**
  * GUI for making min-max based range segmentations.
  * 
@@ -19,7 +21,13 @@ public class ToolRangeSelector extends JPanel  {
 	private JList<String> _seg_list;
 	private JSlider _min_slider, _max_slider;
 	private JLabel _range_sel_title, _min_label, _max_label;
-
+	
+	public int getMax() {
+		return _max;
+	}
+	public int getMin() {
+		return _min;
+	}
 	/**
 	 * Default Constructor. Creates the GUI element and connects it to a
 	 * segmentation.
@@ -56,7 +64,7 @@ public class ToolRangeSelector extends JPanel  {
 		_range_sel_title = new JLabel("Range Selector - "+_seg.getName());
 
 		// range_max needs to be calculated from the bits_stored value
-		// in the current dicom series
+		// in the current dicom series		
 		int range_max = 100;
 		_min = 50;
 		_max = 50;
@@ -70,7 +78,11 @@ public class ToolRangeSelector extends JPanel  {
 				JSlider source = (JSlider) e.getSource();
 				if (source.getValueIsAdjusting()) {
 					_min = (int)source.getValue();
-					System.out.println("_min_slider stateChanged: "+_min);
+					//LabMed.get_is().setSegSlider(_max,_min); //add in exercise 3
+					_seg.setMinSlider(_min);
+					_seg.setMaxSlider(_max);
+					LabMed.get_is().setSegSlider(_seg);
+					//System.out.println("_min_slider stateChanged: "+_min);
 				}
 			}
 		});		
@@ -81,7 +93,11 @@ public class ToolRangeSelector extends JPanel  {
 				JSlider source = (JSlider) e.getSource();
 				if (source.getValueIsAdjusting()) {
 					_max = (int)source.getValue();
-					System.out.println("_max_slider stateChanged: "+_max);
+					//LabMed.get_is().setSegSlider(_max,_min);
+					_seg.setMinSlider(_min);
+					_seg.setMaxSlider(_max);
+					LabMed.get_is().setSegSlider(_seg);
+					//System.out.println("_max_slider stateChanged: "+_max);
 				}
 			}
 		});

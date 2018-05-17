@@ -49,14 +49,14 @@ public class InfoWindow extends JFrame implements Observer {
 	 */
 	public void showInfo(DiFile di) {		
 		setTitle("DICOM File Info: "+di.getFileName());
-		Hashtable<Integer, DiDataElement> data_elements = di.getDataElements();
+		Hashtable<Integer, DiDataElement> databoards = di.getDataElements();
 		
-		Enumeration<Integer> e = data_elements.keys();
+		Enumeration<Integer> e = databoards.keys();
    	  	List<Integer> l = new ArrayList<Integer>();
 
    	  	while(e.hasMoreElements()) {
 		  int key  = ((Integer)(e.nextElement())).intValue();
-		  DiDataElement el = (DiDataElement)(data_elements.get(key));
+		  DiDataElement el = (DiDataElement)(databoards.get(key));
 		  l.add(new Integer(el.getTag()));
 		}
         Collections.sort(l);
@@ -68,7 +68,7 @@ public class InfoWindow extends JFrame implements Observer {
         Iterator<Integer> it = l.iterator();
         while (it.hasNext()) {
         	int tag = (it.next()).intValue();
-        	DiDataElement de = (DiDataElement)(data_elements.get(tag));
+        	DiDataElement de = (DiDataElement)(databoards.get(tag));
         	table_data[i][0] = " "+de.getTagString()+" ";
         	table_data[i][1] = " "+de.getVRString()+" "; 
         	table_data[i][2] = " "+de.getVL()+" "; 

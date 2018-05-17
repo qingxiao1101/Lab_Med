@@ -4,6 +4,8 @@ import java.util.*;
 import java.io.*;
 import javax.swing.*;
 
+import com.sun.org.apache.bcel.internal.generic.NEW;
+
 import misc.DiFile;
 import misc.DiFileInputStream;
 
@@ -22,6 +24,20 @@ public class ImageStack extends Observable {
 	private Hashtable<String, Segment> _segment;
 	private String _dir_name;
 	private int _w, _h, _active;
+	
+	//for different model
+	private Map<Integer,Integer[][]> _volum_pixel_data;
+	private Vector<Integer[][]> _sagittal_img;
+	
+	public Integer[][] get_sagittal_img(int i){
+		return _sagittal_img.get(i);
+	}
+	public Vector<Integer[][]> get_sagittal_img(){
+		return _sagittal_img;
+	}
+	public Integer[][] get_volum_pixel_data(int i) {
+		return _volum_pixel_data.get(i);
+	}
 
 	/**
 	 * Default Constructor.
@@ -32,6 +48,8 @@ public class ImageStack extends Observable {
 		_seg_names = new DefaultListModel<String>();
 		_dir_name = new String();
 		_active = 0;
+		_volum_pixel_data = new HashMap<Integer, Integer[][]>();
+		_sagittal_img = new Vector<Integer[][]>();
 	}
 
 	public static ImageStack getInstance() {
@@ -123,9 +141,9 @@ public class ImageStack extends Observable {
 			    String[] file_names = new String[l.size()];
 		        Collections.sort(l);
 		        Iterator<Integer> it = l.iterator();
-		        int file_counter = 0;
+		        int file_deeper = 0;
 		        while (it.hasNext()) {
-		        	file_names[file_counter++] =  map_number_to_difile_name.get(it.next());		       	
+		        	file_names[file_deeper++] =  map_number_to_difile_name.get(it.next());		       	
 		        }
 		        
 				progress_bar.setMaximum(file_names.length);
@@ -144,12 +162,12 @@ public class ImageStack extends Observable {
 			    		System.exit(0);
 			    	}
 			    	progress_bar.setValue(i+1);
-					_dicom_files.set(i, df);
-
+					_dicom_files.set(i, df);					
 					// initialize default image width and heigth from the first image read
 					if (_w==0) _w = df.getImageWidth();
 					if (_h==0) _h = df.getImageHeight();
-
+					
+					preproccessPrimeData(df,i);
 					setChanged();
 				    notifyObservers(new Message(Message.M_NEW_IMAGE_LOADED));					
 				}
@@ -169,15 +187,18 @@ public class ImageStack extends Observable {
 	 */
 	public Segment addSegment(String name) {
 		Segment seg;
+		
 
 		if (_segment.containsKey(name)) {
 			seg = null;
 		} else {
 			int[] def_colors = {0xff0000, 0x00ff00, 0x0000ff};
 			seg = new Segment(name, _w, _h, _dicom_files.size());
-			seg.setColor(def_colors[_segment.size()]);			
+			seg.setColor(def_colors[_segment.size()]);	
+			seg.setMaxSlider(50); //exercise 3 
+			seg.setMinSlider(50);
 			_segment.put(name, seg);
-			_seg_names.addElement(name);			
+			_seg_names.addElement(name);
 		}
 		
 		return seg;
@@ -198,6 +219,9 @@ public class ImageStack extends Observable {
 		return null;
 	}
 	
+	public Vector<DiFile> getDicomFiles(){
+		return _dicom_files;
+	}
 	/**
 	 * Returns the segment with the given name.
 	 * 
@@ -274,6 +298,31 @@ public class ImageStack extends Observable {
 	    notifyObservers(new Message(Message.M_NEW_ACTIVE_IMAGE, new Integer(i)));
 	}
 	
+	/** observe slider value ; exercise 3
+ 	 * @author Xiao Tang
+	 * @param seg
+	 */
+	void setSegSlider(Segment seg) {
+		/*
+		ArrayList<Integer> trans = new ArrayList<Integer>();
+		trans.add(max);
+		trans.add(min);
+		
+		setChanged();
+	    notifyObservers(new Message(Message.M_SEG_SLIDER,new ArrayList<Integer>(trans)));
+	    */
+		Enumeration<Segment> segs = _segment.elements();
+		
+		while (segs.hasMoreElements()) 	{
+			if(segs.nextElement().getName()==seg.getName()) {
+				this.getSegment(seg.getName()).setMaxSlider(seg.getMaxSlider());
+				this.getSegment(seg.getName()).setMinSlider(seg.getMinSlider());
+				
+				setChanged();
+			    notifyObservers(new Message(Message.M_SEG_SLIDER, new Segment(seg)));
+			}			
+		}		
+	}
 	//////////
 	/**
 	 * sagittal model aufgabe2.2
@@ -282,46 +331,28 @@ public class ImageStack extends Observable {
 	public void initSagittal() {
 		if(this.getNumberOfImages()==0)
 			return;
+		setChanged();				
+		notifyObservers(new Message(Message.M_CLEAR));
 		
-		//getSagittalBild();
-		Thread t = new Thread() {
-			JProgressBar progress_bar;
-			public void run() {
-				
-				setChanged();				
-			    notifyObservers(new Message(Message.M_CLEAR));
-				
-				JFrame progress_win = new JFrame("checking ...");
-				progress_win.setResizable(false);
-				progress_win.setAlwaysOnTop(true);
-				
-				progress_bar = new JProgressBar(0, 256);
-				progress_bar.setValue(0);
-				progress_bar.setStringPainted(true); //
-				
-				progress_win.add(progress_bar);
-				
-				progress_win.pack();  	
-				
-				int main_width = (int)(LabMed.get_window().getSize().getWidth());
-				int main_height = (int)(LabMed.get_window().getSize().getHeight());
-				progress_win.setLocation((main_width-progress_win.getSize().width)/2, (main_height-progress_win.getSize().height)/2);
-				progress_win.setVisible(true);
-				
-				progress_bar.setMaximum(256);
-				progress_bar.setValue(0);
-				
-				for(int i=0;i<256;i++) {
-					progress_bar.setValue(i);
-					
-					setChanged();				
-					notifyObservers(new Message(Message.M_NEW_IMAGE_LOADED));
+		int width = this.getImageHeight();
+		int high = this.getNumberOfImages();
+		
+		
+		for(int w=0;w<this.getImageWidth();w++) {
+			Integer[][] sagittal = new Integer[high][width];
+			
+			
+			for(int layer=0;layer<_volum_pixel_data.size();layer++) {
+				Integer[][] board = _volum_pixel_data.get(layer);
+				for(int i=0;i<width;i++) {
+					sagittal[layer][i] = board[w][i];
 				}
-				progress_win.setVisible(false);
-				
-			}			
-		};
-		t.start();
+			}
+			_sagittal_img.addElement(sagittal);
+			
+			setChanged();				
+			notifyObservers(new Message(Message.M_NEW_IMAGE_LOADED));
+		}
 	}
 	public void initFrontal() {
 		if(this.getNumberOfImages()==0)
@@ -335,6 +366,23 @@ public class ImageStack extends Observable {
 		};
 		t.start();
 	}
+
+
 	
+	public void preproccessPrimeData(DiFile df,int active_id) {		
+		int bits_allocated = df.getBitsAllocated();
+		byte[] prime_data = new byte[(bits_allocated/8)*_w*_h];		
+		prime_data = df.getElement(0x7FE00010).getValues();
+		
+		int[] prime_pixel = new int[_w*_h];
+		int it = 0;
+		Integer[][] board = new Integer[_h][_w];
+		for(int i=0;i<(prime_data.length)/2;i++) {			
+			prime_pixel[i] = (int)((prime_data[it+1] << 8)) + (int)((prime_data[it]));
+			board[i%_w][i/_w] = prime_pixel[i];
+			it += 2;
+		}
+		_volum_pixel_data.put(active_id, board);	
+	}
 }
 

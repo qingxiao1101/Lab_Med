@@ -42,7 +42,9 @@ public class Viewport2d extends Viewport implements Observer {
 	private final int TRANSVERSAL = 0;
 	private final int SAGITTAL = 1;
 	private final int FRONTAL = 2;
-
+	
+	private int _min_slider,_max_slider;
+	private String _seg_name;
 	/**
 	 * Private class, implementing the GUI element for displaying the 2d data.
 	 * Implements the MouseListener Interface.
@@ -143,6 +145,10 @@ public class Viewport2d extends Viewport implements Observer {
         add(_panel2d, BorderLayout.CENTER );        
         add(_img_sel, BorderLayout.EAST );
 		setPreferredSize(new Dimension(DEF_WIDTH+50,DEF_HEIGHT)); //设置首选尺寸
+		
+		_min_slider = 50; //exercise 3
+		_max_slider = 50;
+		_seg_name = new String();
 	}
 
 
@@ -177,16 +183,15 @@ public class Viewport2d extends Viewport implements Observer {
 	public void update_view() {
 		if (_slices.getNumberOfImages() == 0)
 			return;
-		
 		// these are two variables you might need in exercise #2
 		// int active_img_id = _slices.getActiveImageID();
 		// DiFile active_file = _slices.getDiFile(active_img_id);
-		int active_img_id = _slices.getActiveImageID();
-		DiFile active_file = _slices.getDiFile(active_img_id);
+		
 		// _w and _h need to be initialized BEFORE filling the image array !
 		if (_bg_img==null || _bg_img.getWidth(null)!=_w || _bg_img.getHeight(null)!=_h) {
 			reallocate();
 		}
+		
 		// rendering the background picture
 		if (_show_bg) { //父类里已经初始化为1
 			// this is the place for the code displaying a single DICOM image
@@ -196,8 +201,7 @@ public class Viewport2d extends Viewport implements Observer {
 			// example: _bg_img.setRGB(x,y, 0xff00ff00)
 			//                                AARRGGBB
 			// the resulting image will be used in the Panel2d::paint() method
-			//active_file.getElement(0x00280004).getValueAsString()=="MONOCHROME2"
-						
+			//active_file.getElement(0x00280004).getValueAsString()=="MONOCHROME2"						
 			if(true) {
 				//System.out.println(active_file.getElement(0x00280004).getValueAsString());
 				switch(_viewmodel) {
@@ -207,7 +211,7 @@ public class Viewport2d extends Viewport implements Observer {
 					modusSagittal(); break;
 				case FRONTAL:
 					modusFrontal(); break;
-				default: break;		
+				default:break;		
 				}
 			}
 						
@@ -218,22 +222,32 @@ public class Viewport2d extends Viewport implements Observer {
 				bg_pixels[i] = 0xff000000;
 			}
 		}
-
 		// rendering the segmentations. each segmentation is rendered in a
 		// different image.
 		Enumeration<Segment> segs = _map_name_to_seg.elements();
 		while (segs.hasMoreElements()) {
 			// here should be the code for displaying the segmentation data
 			// (exercise 3)
-
-			// Segmentation seg = (Segmentation)(segs.nextElement());
-			// String name = seg.getName();
-			// int[] seg_pixels = ((DataBufferInt)
-			// _bg_img.getRaster().getDataBuffer()).getData();
+			ImageStack is = LabMed.get_is();
+			Segment seg = (Segment)(segs.nextElement());
+			if(_seg_name==seg.getName()) {
+				seg.create_range_seg(_max_slider,_min_slider,is);
+				_map_name_to_seg.remove(seg.getName());
+				_map_name_to_seg.put(seg.getName(), seg);
+				System.out.println(seg.getName());
+				displaySegment(seg);
+			}
+			
+			/*
+			for (int i=0; i<pixel.length; i++) {
+				_bg_img.setRGB(i%_w,i/_w,pixel[i]);
+			}*/
+			 //int[] seg_pixels = ((DataBufferInt)_bg_img.getRaster().getDataBuffer()).getData();
 
 			// to drawn a segmentation image, fill the pixel array seg_pixels
 			// with ARGB values similar to exercise 2
-		}
+		}		
+		
 
 		repaint();
 	}
@@ -275,8 +289,10 @@ public class Viewport2d extends Viewport implements Observer {
 			if (num==0) {
 				// if the new image was the first image in the stack, make it active
 				// (display it).
-				reallocate();
-				_slices.setActiveImage(0);
+				reallocate();	
+				//if(_viewmodel==TRANSVERSAL)
+					_slices.setActiveImage(0);
+				
 			}			
 		}
 		
@@ -290,6 +306,20 @@ public class Viewport2d extends Viewport implements Observer {
 			if (update_needed) {
 				update_view();
 			}
+		}
+		
+		if (m._type == Message.M_SEG_SLIDER) {
+			/*
+			ArrayList<Integer> slider = (ArrayList<Integer>)m._obj;
+			_max_slider = slider.get(0);
+			_min_slider = slider.get(1);
+			_if_segment = true;
+			*/
+			Segment seg = (Segment)m._obj;
+			_seg_name = seg.getName();
+			_max_slider = seg.getMaxSlider();
+			_min_slider = seg.getMinSlider();
+			update_view();
 		}
 	  }
 
@@ -318,10 +348,8 @@ public class Viewport2d extends Viewport implements Observer {
 		} else {
 			_map_seg_name_to_img.remove(name);
 		}
-		
 		// most of the buerocracy is done by the parent viewport class
 		super.toggleSeg(seg);
-		
 		return gotcha;
 	}
 	
@@ -340,16 +368,65 @@ public class Viewport2d extends Viewport implements Observer {
 		}break;			
 		case 1:{
 			_viewmodel = SAGITTAL;
-			//LabMed.get_is().initSagittal(); //add in exercise 2 
+			_slices.initSagittal(); //add in exercise 2 
 		}break;			 
 		case 2:{
 			_viewmodel = FRONTAL;
-			//LabMed.get_is().initFrontal();	//add in exercise 2
+			_slices.initFrontal();	//add in exercise 2
 		}break;			
 		default:break;
 		}
 		
 		update_view();
+	}
+
+	private int[] dataProcess() {
+		int active_img_id = _slices.getActiveImageID();
+		int high_bit =_slices.getDiFile(0).getHighBit();		
+		int max = 2<<high_bit;
+		int window_center = max/2;				
+		Integer[][] prime_pixel = new Integer[_h][_w];
+		
+		switch (_viewmodel) {		
+		case TRANSVERSAL:{
+			prime_pixel = _slices.get_volum_pixel_data(active_img_id);
+		}	break;		
+		case SAGITTAL:{
+			if(_slices.get_sagittal_img().isEmpty())
+				System.out.println("sagittal is empty!");
+			System.out.println("active_img_id : "+active_img_id);
+			prime_pixel = _slices.get_sagittal_img(active_img_id);
+			System.out.println("width: "+_w+"  height: "+_h);
+//			for(int i=0;i<_h;i++) {
+//				for(int j=0;j<_w;j++) {
+//					System.out.print(" "+prime_pixel[i][j]);
+//				}
+//				System.out.println(" ");	
+//			}			
+//			System.out.println("here!!!");
+		}	break;
+
+		default:
+			break;
+		}
+						
+		int[] scale_pixel = new int[_w*_h];
+		int[] pixel = new int[scale_pixel.length];
+		for(int i=0;i<_h;i++) {
+			for(int j=0;j<_w;j++) {
+				if(prime_pixel[i][j]<=(window_center -0.5 - (max-1)/2)) {
+					scale_pixel[i*_w+j] = 0;
+				}
+				else if(prime_pixel[i][j] > (window_center -0.5 + (max-1)/2)) {
+					scale_pixel[i*_w+j] = 255;
+				}
+				else {
+					scale_pixel[i*_w+j] = (int)(((prime_pixel[i][j]-(window_center-0.5))/(max-1)+0.5)*(255-0)+0);
+				}
+				pixel[i*_w+j] = (0xff<<24) + (scale_pixel[i*_w+j]<<16) + (scale_pixel[i*_w+j]<<8) + scale_pixel[i*_w+j];
+			}
+		}
+		return pixel;
 	}
 	/**
 	 * set different model
@@ -357,64 +434,43 @@ public class Viewport2d extends Viewport implements Observer {
 	 */
 	public void modusTransversal() {
 		System.out.println("Viewmode "+"Transversal");
+		
 		int active_img_id = _slices.getActiveImageID();
 		DiFile active_file = _slices.getDiFile(active_img_id);
 			
-		_h = active_file.getImageWidth();
-		_w = active_file.getImageHeight();
+		_w = active_file.getImageWidth();
+		_h = active_file.getImageHeight();
 		_bg_img = new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);
-		//int file_type = active_file.getFileType();
-		int bits_allocated = active_file.getBitsAllocated();
-		//int bits_stored = active_file.getBitsStored();
-		int high_bit =active_file.getHighBit();
-		//int intercept=active_file.getIntercept();
-		//int slope=active_file.getSlope();
-		int max = 2<<high_bit;
-		int window_center = max/2;
 		
-		byte[] prime_data = new byte[(bits_allocated/8)*_w*_h];
-		prime_data = active_file.getElement(0x7FE00010).getValues();
-		int[] prime_pixel = new int[_w*_h];
-		int[] scale_pixel = new int[_w*_h];
-		int[] pixel = new int[scale_pixel.length];
-		int it = 0;
-		for(int i=0;i<(prime_data.length)/2;i++) {			
-			prime_pixel[i] = (int)((prime_data[it+1] << 8)) + (int)((prime_data[it]));
-			if(prime_pixel[i]<=(window_center -0.5 - (max-1)/2)) {
-				scale_pixel[i] = 0;
-			}
-			else if(prime_pixel[i] > (window_center -0.5 + (max-1)/2)) {
-				scale_pixel[i] = 255;
-			}
-			else {
-				scale_pixel[i] = (int)(((prime_pixel[i]-(window_center-0.5))/(max-1)+0.5)*(255-0)+0);
-			}
-			pixel[i] = (0xff<<24) + (scale_pixel[i]<<16) + (scale_pixel[i]<<8) + scale_pixel[i];
-			//pixel[i] = (0xff<<24) + (scale_pixel[i]<<16) + (0<<8) + 0;
-			it += 2;
+		int[] pixel = dataProcess();		
+		
+		//--------------------------------------------------------------
+		for (int i=0; i<pixel.length; i++) {
+			_bg_img.setRGB(i/_w,i%_w,pixel[i]);
+			//_bg_img.setRGB(i%_w,i/_w,pixel[i]);
 		}
 		
 		
-				
+		/*
 		final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
 		for (int i=0; i<bg_pixels.length; i++) {
 			bg_pixels[i] = pixel[i];
-		}		
+		}	
+		*/	
 	}
 	
 	public void modusSagittal() {
-		System.out.println("Viewmode "+"Frontal");
-		for(int i=0;i<20;i++)
-			_slice_names.addElement("i");
-		
+		System.out.println("Viewmode "+"Sagittal");
+
 		DiFile first_file = _slices.getDiFile(0);
 		_w = first_file.getImageHeight();
 		_h = _slices.getNumberOfImages();
 		_bg_img = new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);	
-		
+		int[] pixel = dataProcess();
 		final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
 		for (int i=0; i<bg_pixels.length; i++) {
-			bg_pixels[i] = 0xff000000;
+			bg_pixels[i] = pixel[i];
+			//bg_pixels[i] = 0xff000000;
 		}
 	}
 	public void modusFrontal() {
@@ -429,5 +485,29 @@ public class Viewport2d extends Viewport implements Observer {
 		for (int i=0; i<bg_pixels.length; i++) {
 			bg_pixels[i] = 0xffffffff;
 		}
+	}
+
+	public void displaySegment(Segment seg) {
+		int active_img_id = _slices.getActiveImageID();
+		int[] pixel = dataProcess();
+		
+		for (int i=0; i<pixel.length; i++) {
+			if(seg.getMask(active_img_id).get(i/_w, i%_w)) {
+				_bg_img.setRGB(i%_w,i/_w,pixel[i]);
+			}else {
+				_bg_img.setRGB(i%_w,i/_w,0xff000000);
+			}			
+		}
+		/*
+		 final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
+			for (int i=0; i<bg_pixels.length; i++) {
+				if(seg.getMask(active_img_id).get(i/_w, i%_w)) {
+					bg_pixels[i] = pixel[i];
+				}					
+				else {
+					bg_pixels[i] = 0xff000000;
+				}
+			}
+		*/
 	}
 }

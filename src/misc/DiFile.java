@@ -15,24 +15,24 @@ public class DiFile {
 	private int _h;
 	private int _bits_stored;
 	private int _bits_allocated;
-	private Hashtable<Integer, DiDataElement> _data_elements;
+	private Hashtable<Integer, DiDataElement> _databoards;
 	private int _image_number;
 	String _file_name;
 	private int _file_type;
 	private int _high_bit;
 	private int _intercept;
 	private int _slope;
-	public final int EX = 1;
-	public final int IM = 0;
+//	public final int EX = 1;
+//	public final int IM = 0;
 
 	/**
 	 * Default Construtor - creates an empty DicomFile.
 	 */
 	public DiFile () {
 		_w = _h = _bits_stored = _bits_allocated = _image_number = 0;
-		_data_elements = new Hashtable<Integer, DiDataElement>();
+		_databoards = new Hashtable<Integer, DiDataElement>();
 		_file_name = null;
-		_file_type = EX;  //default ex file
+		//_file_type = EX;  //default ex file
 	}
 
 	/**
@@ -69,7 +69,7 @@ public class DiFile {
 				 */
 			   
 			   tag = DE.getTag();
-			   _data_elements.put(DE.getTag(),DE);
+			   _databoards.put(DE.getTag(),DE);
 			   //System.out.println(DE.toString());
 		   }
 		   while(tag != 0x7FE00010); 
@@ -97,12 +97,12 @@ public class DiFile {
 		String str = new String();
 		
 		str+=_file_name+"\n";
-		Enumeration<Integer> e = _data_elements.keys();  //function same as iterator
+		Enumeration<Integer> e = _databoards.keys();  //function same as iterator
    	  	List<String> l = new ArrayList<String>();
 
    	  	while(e.hasMoreElements()) {
 		  Integer tag  = e.nextElement();
-		  DiDataElement el = (DiDataElement)_data_elements.get(tag);
+		  DiDataElement el = (DiDataElement)_databoards.get(tag);
 		  l.add(el.toString());
 		}
 		
@@ -137,7 +137,7 @@ public class DiFile {
 	 * @see IntHashtable
 	 */
 	public Hashtable<Integer, DiDataElement> getDataElements() {
-		return _data_elements;
+		return _databoards;
 	}
 
 	/**
@@ -146,7 +146,7 @@ public class DiFile {
 	 * @return
 	 */
 	public DiDataElement getElement(int id) {
-		return _data_elements.get(id);
+		return _databoards.get(id);
 	}
 
 	/**

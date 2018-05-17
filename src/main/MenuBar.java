@@ -317,7 +317,7 @@ public class MenuBar extends JMenuBar {
 				String name = JOptionPane.showInputDialog(_win, "Name der Segmentierung");
 				if (name != null) {
 					_no_entries2d.setVisible(false);
-					_no_entries3d.setVisible(false);
+					_no_entries3d.setVisible(false);					
 					Segment seg = is.addSegment(name);
 					_v2d.toggleSeg(seg);
 					JMenuItem item = new JCheckBoxMenuItem(name, true);
@@ -326,6 +326,7 @@ public class MenuBar extends JMenuBar {
 					item = new JCheckBoxMenuItem(name, false);
 					item.addActionListener(toggleSegListener3d);
 					_menu3d.add(item);
+					
 					_tools.showTool(new ToolRangeSelector(seg));
 				}
 			}

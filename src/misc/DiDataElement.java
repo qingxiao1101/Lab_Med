@@ -7,7 +7,7 @@ import misc.DiDi;
  */
 public class DiDataElement {
 	private int _groupid;
-	private int _elementid;
+	private int boardid;
 	private int _vl;
 	private int _vr;
 	private byte[] _values;
@@ -17,7 +17,7 @@ public class DiDataElement {
 	 */
 	public DiDataElement() {
 		_groupid = 0;
-		_elementid = 0;
+		boardid = 0;
 		_vl = 0;
 		_vr = 0;
 		_values = null;
@@ -37,7 +37,7 @@ public class DiDataElement {
 		int id = is.getShort();
 		int eid = is.getShort();
 		setGroupID(id);
-		setElementID(eid);		
+		set_boardID(eid);		
 		int tag = (id << 16) + eid;
 		//System.out.println(Integer.toHexString(tag));
 		int b0 = is.getByte();
@@ -101,15 +101,15 @@ public class DiDataElement {
 	 * @return the element numbber as an integer.
 	 */
 	public int getElementID() {
-		return _elementid;
+		return boardid;
 	}
 
 	/**
 	 * Sets the element number.
 	 * @param element_number the element number.
 	 */
-	public void setElementID(int element_number) {
-		this._elementid = element_number;
+	public void set_boardID(int element_number) {
+		this.boardid = element_number;
 	}
 
 	/**
@@ -275,7 +275,7 @@ public class DiDataElement {
 	 * @return the tag id as an int
 	 */
 	public int getTag() {
-		return (_groupid<<16 | _elementid);
+		return (_groupid<<16 | boardid);
 	}
 
 
@@ -286,7 +286,7 @@ public class DiDataElement {
 	 * @return the tag id as a string
 	 */
 	public String getTagString() {
-		return "("+my_format(_groupid)+","+my_format(_elementid)+")";
+		return "("+my_format(_groupid)+","+my_format(boardid)+")";
 	}
 
 	/**

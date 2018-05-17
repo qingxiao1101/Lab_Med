@@ -58,7 +58,6 @@ public class Viewport extends JPanel {
 	 */
 	public boolean toggleSeg(Segment seg) {
 		String name = seg.getName();
-
 		if (_map_name_to_seg.get(name)!=null) {
 			// if it is not shown currently, put the name in the internal hashtable
 			_map_name_to_seg.remove(name);
