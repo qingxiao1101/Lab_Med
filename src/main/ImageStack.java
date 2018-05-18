@@ -372,13 +372,13 @@ public class ImageStack extends Observable {
 			int high = this.getNumberOfImages();
 			int img_num = this.getImageWidth();
 			
-			for(int w=0;w<img_num;w++) {
+			for(int num=0;num<img_num;num++) {
 				Integer[][] sagittal = new Integer[high][width];
 				
 				for(int layer=0;layer<_volum_pixel_data.size();layer++) {
 					Integer[][] board = _volum_pixel_data.get(layer);
 					for(int i=0;i<width;i++) {
-						sagittal[layer][i] = board[w][i];
+						sagittal[layer][i] = board[num][i];
 					}
 				}
 				_sagittal_img.addElement(sagittal);

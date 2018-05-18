@@ -10,7 +10,7 @@ public class BitMask {
 	private long[] _data;
 	private int _w;
 	private int _h;
-
+	
 	/**
 	 * Default Constructor with width and height.
 	 * 
@@ -23,7 +23,12 @@ public class BitMask {
 		_data = new long[((w*h)/64)+1];
 		clear();
 	}
-
+	public int get_w() {
+		return _w;
+	}
+	public int get_h() {
+		return _h;
+	}
 	/**
 	 * Sets or unsets a bit pixel.
 	 *  

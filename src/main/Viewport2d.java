@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import misc.BitMask;
 import misc.DiFile;
 
 /**
@@ -225,37 +226,61 @@ public class Viewport2d extends Viewport implements Observer {
 		}
 		// rendering the segmentations. each segmentation is rendered in a
 		// different image.
-		for(String seg_name : _map_name_to_seg.keySet()) {
-			
+		for(String seg_name : _map_name_to_seg.keySet()) {		
 			Segment seg = _slices.getSegment(seg_name);
 			System.out.println("showing segment "+seg.getName()+" color: "+Integer.toHexString(seg.getColor()));			
 			seg.create_range_seg(_max_slider, _min_slider, _slices);
 			int active_id = _slices.getActiveImageID();
 			int[] pixel = dataProcess();
 			BufferedImage buffer= new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);
-			for(int column=0;column<_h;column++) {
-				for(int row=0;row<_w;row++) {
-					if(seg.getMask(active_id).get(column, row))
-						buffer.setRGB(column,row,pixel[column*_w+row]&(0xff000000+seg.getColor()));
-					else
-						buffer.setRGB(column,row,0xff000000);
+			
+			switch(_viewmodel) {
+			case 0:{
+				for(int column=0;column<_h;column++) {
+					for(int row=0;row<_w;row++) {
+						if(seg.getMask(active_id).get(column, row))
+							buffer.setRGB(column,row,pixel[column*_w+row]&(0xff000000+seg.getColor()));
+						else
+							buffer.setRGB(column,row,0xff000000);
+					}
 				}
-			}
+			}	break;
+			case 1:{
+				int width = seg.getMask(0).get_h();
+				int high = seg.getMaskNum();
+				
+				for(int layer=0;layer<high;layer++) {
+					BitMask mask = seg.getMask(layer);
+					for(int i=0;i<width;i++) {
+						if(mask.get(active_id,i))
+							buffer.setRGB(i,layer,pixel[layer*width+i]&(0xff000000+seg.getColor()));
+						else
+							buffer.setRGB(i,layer,0xff000000);
+					}
+				}
+			}	break;
+			case 2:{
+				int width = seg.getMask(0).get_w();
+				int high = seg.getMaskNum();
+				for(int layer=0;layer<high;layer++) {
+					BitMask mask = seg.getMask(layer);
+					for(int i=0;i<width;i++) {
+						if(mask.get(i,active_id))
+							buffer.setRGB(i,layer,pixel[layer*width+i]&(0xff000000+seg.getColor()));
+						else
+							buffer.setRGB(i,layer,0xff000000);
+					}
+					
+				}
+				
+
+			}	break;
+			default: break;
+			}			
 			_map_seg_name_to_img.put(seg_name, buffer);
 		}
 		
-			
-
 		
-		
-		
-/*		Enumeration<Segment> segs = _map_name_to_seg.elements();
-		while (segs.hasMoreElements()) {
-			// here should be the code for displaying the segmentation data
-			// (exercise 3)
-			}			
-		}		
-	*/	
 		repaint();
 	}
 	
@@ -281,6 +306,13 @@ public class Viewport2d extends Viewport implements Observer {
 		if (m._type == Message.M_CLEAR) {
 			// clear all slice info
 			_slice_names.clear();
+			//_map_name_to_seg.clear();
+			_map_seg_name_to_img.clear();
+//			Set<String> segs = _map_seg_name_to_img.keySet();	
+//			for(String str:segs) {
+//				_map_seg_name_to_img.remove(str);
+//			}
+			//_map_seg_name_to_img.clear();
 		}
 		
 		if (m._type == Message.M_NEW_IMAGE_LOADED) {
@@ -298,8 +330,7 @@ public class Viewport2d extends Viewport implements Observer {
 				// (display it).
 				reallocate();	
 				//if(_viewmodel==TRANSVERSAL)
-					_slices.setActiveImage(0);
-					//_if_display_segment = false;				
+					_slices.setActiveImage(0);				
 			}			
 		}
 		
@@ -308,20 +339,16 @@ public class Viewport2d extends Viewport implements Observer {
 		}
 		
 		if (m._type == Message.M_SEG_CHANGED) {
-			String seg_name = ((Segment)m._obj).getName();
+			Segment seg = (Segment)m._obj;
+			String seg_name = seg.getName();
 			boolean update_needed = _map_name_to_seg.containsKey(seg_name);
 			if (update_needed) {
+				//toggleSeg(seg);
 				update_view();
 			}
 		}
 		
 		if (m._type == Message.M_SEG_SLIDER) {
-			/*
-			ArrayList<Integer> slider = (ArrayList<Integer>)m._obj;
-			_max_slider = slider.get(0);
-			_min_slider = slider.get(1);
-			_if_segment = true;
-			*/
 			Segment seg = (Segment)m._obj;
 			_seg_name = seg.getName();
 			_max_slider = seg.getMaxSlider();
