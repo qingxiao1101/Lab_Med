@@ -27,9 +27,19 @@ public class ImageStack extends Observable {
 	
 	//for different model
 	private Map<Integer,Integer[][]> _volum_pixel_data;
+	private Vector<Integer[][]> _transversal_img;
 	private Vector<Integer[][]> _sagittal_img;
 	private Vector<Integer[][]> _frontal_img;
 	
+	public Vector<Integer[][]> get_transversal_img() {
+		return _transversal_img;
+	}
+	public Integer[][] get_transversal_img(int key) {
+		return _transversal_img.get(key);
+	}
+	public void set_transversal_img(Vector<Integer[][]> _transversal_img) {
+		this._transversal_img = _transversal_img;
+	}
 	public Integer[][] get_sagittal_img(int i){
 		return _sagittal_img.get(i);
 	}
@@ -59,6 +69,7 @@ public class ImageStack extends Observable {
 		_volum_pixel_data = new HashMap<Integer, Integer[][]>();
 		_sagittal_img = new Vector<Integer[][]>();
 		_frontal_img = new Vector<Integer[][]>();
+		_transversal_img = new Vector<Integer[][]>();
 	}
 
 	public static ImageStack getInstance() {
@@ -204,8 +215,9 @@ public class ImageStack extends Observable {
 			int[] def_colors = {0xff0000, 0x00ff00, 0x0000ff};
 			seg = new Segment(name, _w, _h, _dicom_files.size());
 			seg.setColor(def_colors[_segment.size()]);	
-			seg.setMaxSlider(50); //exercise 3 
-			seg.setMinSlider(50);
+			seg.setMinSlider(50); //exercise 3 
+			seg.setMaxSlider(50);
+			
 			_segment.put(name, seg);
 			_seg_names.addElement(name);
 		}
@@ -312,14 +324,6 @@ public class ImageStack extends Observable {
 	 * @param seg
 	 */
 	void setSegSlider(Segment seg) {
-		/*
-		ArrayList<Integer> trans = new ArrayList<Integer>();
-		trans.add(max);
-		trans.add(min);
-		
-		setChanged();
-	    notifyObservers(new Message(Message.M_SEG_SLIDER,new ArrayList<Integer>(trans)));
-	    */
 		Enumeration<Segment> segs = _segment.elements();
 		
 		while (segs.hasMoreElements()) 	{
@@ -332,74 +336,98 @@ public class ImageStack extends Observable {
 			}			
 		}		
 	}
+	void segChanged(Segment seg) {
+		
+		setChanged();
+	    notifyObservers(new Message(Message.M_SEG_CHANGED, new Segment(seg)));
+	}
+	
 	//////////
 	/**
-	 * sagittal model aufgabe2.2
-	 * @author qing
+	 * initial different views model --aufgabe2.2
+	 * @author Xiao Tang
 	 */
-	public void initSagittal() {
+	public void initThreeViewModel(int model) {
 		if(this.getNumberOfImages()==0)
 			return;
 		setChanged();				
 		notifyObservers(new Message(Message.M_CLEAR));
-		
-		int width = this.getImageHeight();
-		int high = this.getNumberOfImages();
-		
-		
-		for(int w=0;w<this.getImageWidth();w++) {
-			Integer[][] sagittal = new Integer[high][width];
+		switch(model) {
+		case 0:{
+			int width = this.getImageWidth(); //breite
+			int high = this.getImageHeight(); //hoehe
+			int img_num = this.getNumberOfImages();
 			
-			
-			for(int layer=0;layer<_volum_pixel_data.size();layer++) {
-				Integer[][] board = _volum_pixel_data.get(layer);
-				for(int i=0;i<width;i++) {
-					sagittal[layer][i] = board[w][i];
-				}
-			}
-			_sagittal_img.addElement(sagittal);
-			
-			setChanged();				
-			notifyObservers(new Message(Message.M_NEW_IMAGE_LOADED));
-		}
-	}
-	public void initFrontal() {
-		if(this.getNumberOfImages()==0)
-			return;
-		setChanged();				
-		notifyObservers(new Message(Message.M_CLEAR));
-		
-		int width = this.getImageWidth();
-		int high = this.getNumberOfImages();
+			for(int w=0;w<img_num;w++) {
+				Integer[][] transversal = new Integer[high][width];
+				transversal = _volum_pixel_data.get(w);
+				_transversal_img.addElement(transversal);
 				
-		for(int h=0;h<this.getImageHeight();h++) {
-			Integer[][] frontal = new Integer[high][width];			
-			
-			for(int layer=0;layer<_volum_pixel_data.size();layer++) {
-				Integer[][] board = _volum_pixel_data.get(layer);
-				for(int i=0;i<width;i++) {
-					frontal[layer][i] = board[i][h];
-				}
+				setChanged();				
+				notifyObservers(new Message(Message.M_NEW_IMAGE_LOADED));
 			}
-			_frontal_img.addElement(frontal);
+		}break;
+		case 1:{
+			int width = this.getImageHeight();
+			int high = this.getNumberOfImages();
+			int img_num = this.getImageWidth();
 			
-			setChanged();				
-			notifyObservers(new Message(Message.M_NEW_IMAGE_LOADED));
-		}
+			for(int w=0;w<img_num;w++) {
+				Integer[][] sagittal = new Integer[high][width];
+				
+				for(int layer=0;layer<_volum_pixel_data.size();layer++) {
+					Integer[][] board = _volum_pixel_data.get(layer);
+					for(int i=0;i<width;i++) {
+						sagittal[layer][i] = board[w][i];
+					}
+				}
+				_sagittal_img.addElement(sagittal);
+				
+				setChanged();				
+				notifyObservers(new Message(Message.M_NEW_IMAGE_LOADED));
+			}
+		}break;
+		case 2:{
+			int width = this.getImageWidth();
+			int high = this.getNumberOfImages();
+					
+			for(int h=0;h<this.getImageHeight();h++) {
+				Integer[][] frontal = new Integer[high][width];			
+				
+				for(int layer=0;layer<_volum_pixel_data.size();layer++) {
+					Integer[][] board = _volum_pixel_data.get(layer);
+					for(int i=0;i<width;i++) {
+						frontal[layer][i] = board[i][h];
+					}
+				}
+				_frontal_img.addElement(frontal);
+				
+				setChanged();				
+				notifyObservers(new Message(Message.M_NEW_IMAGE_LOADED));
+			}
+		}break;
+		default: break;
+		}		
 	}
-
-
 	
+	/**
+	 * @author Tang
+	 * @param df
+	 * @param active_id
+	 */
 	public void preproccessPrimeData(DiFile df,int active_id) {		
 		int bits_allocated = df.getBitsAllocated();
+		int slope = df.getSlope();
+		int intercept = df.getIntercept();
 		byte[] prime_data = new byte[(bits_allocated/8)*_w*_h];		
 		prime_data = df.getElement(0x7FE00010).getValues();
-		
+			
 		int[] prime_pixel = new int[_w*_h];
 		int it = 0;
 		Integer[][] board = new Integer[_h][_w];
 		for(int i=0;i<(prime_data.length)/2;i++) {			
 			prime_pixel[i] = (int)((prime_data[it+1] << 8)) + (int)((prime_data[it]));
+			//prime_pixel[i] = slope*prime_pixel[i] + intercept; // original data modification
 			board[i%_w][i/_w] = prime_pixel[i];
 			it += 2;
 		}

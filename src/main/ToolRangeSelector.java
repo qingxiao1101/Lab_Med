@@ -53,6 +53,7 @@ public class ToolRangeSelector extends JPanel  {
 					_seg = slices.getSegment(name);
 					_range_sel_title.setText("Range Selector - "+_seg.getName());
 					// ...
+					slices.segChanged(_seg);
 				}
 			}
 		});
@@ -78,10 +79,9 @@ public class ToolRangeSelector extends JPanel  {
 				JSlider source = (JSlider) e.getSource();
 				if (source.getValueIsAdjusting()) {
 					_min = (int)source.getValue();
-					//LabMed.get_is().setSegSlider(_max,_min); //add in exercise 3
 					_seg.setMinSlider(_min);
 					_seg.setMaxSlider(_max);
-					LabMed.get_is().setSegSlider(_seg);
+					slices.setSegSlider(_seg);
 					//System.out.println("_min_slider stateChanged: "+_min);
 				}
 			}
@@ -93,10 +93,9 @@ public class ToolRangeSelector extends JPanel  {
 				JSlider source = (JSlider) e.getSource();
 				if (source.getValueIsAdjusting()) {
 					_max = (int)source.getValue();
-					//LabMed.get_is().setSegSlider(_max,_min);
 					_seg.setMinSlider(_min);
 					_seg.setMaxSlider(_max);
-					LabMed.get_is().setSegSlider(_seg);
+					slices.setSegSlider(_seg);
 					//System.out.println("_max_slider stateChanged: "+_max);
 				}
 			}

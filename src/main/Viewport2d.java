@@ -42,6 +42,7 @@ public class Viewport2d extends Viewport implements Observer {
 	private final int TRANSVERSAL = 0;
 	private final int SAGITTAL = 1;
 	private final int FRONTAL = 2;
+	//private final int NO_if_display_segment = 3;
 	
 	private int _min_slider,_max_slider;
 	private String _seg_name;
@@ -206,7 +207,7 @@ public class Viewport2d extends Viewport implements Observer {
 				//System.out.println(active_file.getElement(0x00280004).getValueAsString());
 				switch(_viewmodel) {
 				case TRANSVERSAL: 
-					modusTransversal(); break;
+					modusTransversal(null); break;
 				case SAGITTAL:
 					modusSagittal(); break;
 				case FRONTAL:
@@ -224,31 +225,37 @@ public class Viewport2d extends Viewport implements Observer {
 		}
 		// rendering the segmentations. each segmentation is rendered in a
 		// different image.
-		Enumeration<Segment> segs = _map_name_to_seg.elements();
+		for(String seg_name : _map_name_to_seg.keySet()) {
+			
+			Segment seg = _slices.getSegment(seg_name);
+			System.out.println("showing segment "+seg.getName()+" color: "+Integer.toHexString(seg.getColor()));			
+			seg.create_range_seg(_max_slider, _min_slider, _slices);
+			int active_id = _slices.getActiveImageID();
+			int[] pixel = dataProcess();
+			BufferedImage buffer= new BufferedImage(_w, _h, BufferedImage.TYPE_INT_ARGB);
+			for(int column=0;column<_h;column++) {
+				for(int row=0;row<_w;row++) {
+					if(seg.getMask(active_id).get(column, row))
+						buffer.setRGB(column,row,pixel[column*_w+row]&(0xff000000+seg.getColor()));
+					else
+						buffer.setRGB(column,row,0xff000000);
+				}
+			}
+			_map_seg_name_to_img.put(seg_name, buffer);
+		}
+		
+			
+
+		
+		
+		
+/*		Enumeration<Segment> segs = _map_name_to_seg.elements();
 		while (segs.hasMoreElements()) {
 			// here should be the code for displaying the segmentation data
 			// (exercise 3)
-			ImageStack is = LabMed.get_is();
-			Segment seg = (Segment)(segs.nextElement());
-			if(_seg_name==seg.getName()) {
-				seg.create_range_seg(_max_slider,_min_slider,is);
-				_map_name_to_seg.remove(seg.getName());
-				_map_name_to_seg.put(seg.getName(), seg);
-				System.out.println(seg.getName());
-				displaySegment(seg);
-			}
-			
-			/*
-			for (int i=0; i<pixel.length; i++) {
-				_bg_img.setRGB(i%_w,i/_w,pixel[i]);
-			}*/
-			 //int[] seg_pixels = ((DataBufferInt)_bg_img.getRaster().getDataBuffer()).getData();
-
-			// to drawn a segmentation image, fill the pixel array seg_pixels
-			// with ARGB values similar to exercise 2
+			}			
 		}		
-		
-
+	*/	
 		repaint();
 	}
 	
@@ -292,7 +299,7 @@ public class Viewport2d extends Viewport implements Observer {
 				reallocate();	
 				//if(_viewmodel==TRANSVERSAL)
 					_slices.setActiveImage(0);
-				
+					//_if_display_segment = false;				
 			}			
 		}
 		
@@ -321,9 +328,7 @@ public class Viewport2d extends Viewport implements Observer {
 			_min_slider = seg.getMinSlider();
 			update_view();
 		}
-	  }
-
-	
+	  }	
 	
     /**
 	 * Returns the current file.
@@ -361,22 +366,19 @@ public class Viewport2d extends Viewport implements Observer {
 	 */
 	public void setViewMode(int mode) {
 		// you should do something with the new viewmode here
-		//System.out.println("Viewmode "+mode);
 		switch(mode) {
 		case 0:{
 			_viewmodel = TRANSVERSAL;
 		}break;			
 		case 1:{
 			_viewmodel = SAGITTAL;
-			_slices.initSagittal(); //add in exercise 2 
 		}break;			 
 		case 2:{
 			_viewmodel = FRONTAL;
-			_slices.initFrontal();	//add in exercise 2
 		}break;			
 		default:break;
 		}
-		
+		_slices.initThreeViewModel(_viewmodel);
 		update_view();
 	}
 
@@ -423,7 +425,7 @@ public class Viewport2d extends Viewport implements Observer {
 	 * set different model
 	 * @author xiao; Tang
 	 */
-	public void modusTransversal() {
+	public void modusTransversal(Segment seg) {
 		System.out.println("Viewmode "+"Transversal");
 		
 		int active_img_id = _slices.getActiveImageID();
@@ -436,12 +438,12 @@ public class Viewport2d extends Viewport implements Observer {
 		int[] pixel = dataProcess();		
 		
 		//--------------------------------------------------------------
-		for (int i=0; i<pixel.length; i++) {
-			_bg_img.setRGB(i/_w,i%_w,pixel[i]);
-			//_bg_img.setRGB(i%_w,i/_w,pixel[i]);
-		}
-		
-		
+		if(true) {//!_if_display_segment
+			for (int i=0; i<pixel.length; i++) {
+				_bg_img.setRGB(i/_w,i%_w,pixel[i]);
+				//_bg_img.setRGB(i/_w,i%_w,pixel[i]);
+			}
+		}				
 		/*
 		final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
 		for (int i=0; i<bg_pixels.length; i++) {
@@ -483,13 +485,17 @@ public class Viewport2d extends Viewport implements Observer {
 		int active_img_id = _slices.getActiveImageID();
 		int[] pixel = dataProcess();
 		
+		final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
 		for (int i=0; i<pixel.length; i++) {
-			if(seg.getMask(active_img_id).get(i/_w, i%_w)) {
-				_bg_img.setRGB(i%_w,i/_w,pixel[i]);
-			}else {
-				_bg_img.setRGB(i%_w,i/_w,0xff000000);
-			}			
+			_bg_img.setRGB(i/_w,i%_w,pixel[i]);
 		}
+//		for (int i=0; i<pixel.length; i++) {
+//			if(seg.getMask(active_img_id).get(i/_w, i%_w)) {
+//				_bg_img.setRGB(i%_w,i/_w,pixel[i]);
+//			}else {
+//				_bg_img.setRGB(i%_w,i/_w,0xff000000);
+//			}			
+//		}
 		/*
 		 final int[] bg_pixels = ((DataBufferInt) _bg_img.getRaster().getDataBuffer()).getData();
 			for (int i=0; i<bg_pixels.length; i++) {
