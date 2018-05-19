@@ -14,6 +14,7 @@ public class Message {
 	public static final int M_NEW_SEGMENTATION = 300;
 	public static final int M_SEG_CHANGED 	   = 301;
 	public static final int M_SEG_SLIDER 	   = 400;
+	public static final int M_NEW_SETTING 	   = 401;
 	
 	public int _type; 
 	public Object _obj;

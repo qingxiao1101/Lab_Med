@@ -342,6 +342,10 @@ public class ImageStack extends Observable {
 	    notifyObservers(new Message(Message.M_SEG_CHANGED, new Segment(seg)));
 	}
 	
+	void widthCenterChanged(int[] value) {
+		setChanged();
+	    notifyObservers(new Message(Message.M_NEW_SETTING, value));
+	}
 	//////////
 	/**
 	 * initial different views model --aufgabe2.2

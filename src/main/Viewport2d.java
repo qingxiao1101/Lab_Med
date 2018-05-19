@@ -47,6 +47,9 @@ public class Viewport2d extends Viewport implements Observer {
 	
 	private int _min_slider,_max_slider;
 	private String _seg_name;
+
+	private int _window_width;
+	private int _window_center;
 	/**
 	 * Private class, implementing the GUI element for displaying the 2d data.
 	 * Implements the MouseListener Interface.
@@ -150,6 +153,10 @@ public class Viewport2d extends Viewport implements Observer {
 		
 		_min_slider = 50; //exercise 3
 		_max_slider = 50;
+		
+		_window_width = 4096;
+		_window_center = _window_width/2;
+		
 		_seg_name = new String();
 	}
 
@@ -355,6 +362,14 @@ public class Viewport2d extends Viewport implements Observer {
 			_min_slider = seg.getMinSlider();
 			update_view();
 		}
+		if (m._type == Message.M_NEW_SETTING) {
+			int[] value = (int[])m._obj;
+			_window_width = value[0];
+			_window_center = value[1];
+			//System.out.println("_window_width: "+_window_width+"  _window_center: "+_window_center);
+			update_view();
+		}
+		
 	  }	
 	
     /**
@@ -411,9 +426,11 @@ public class Viewport2d extends Viewport implements Observer {
 
 	private int[] dataProcess() {
 		int active_img_id = _slices.getActiveImageID();
-		int high_bit =_slices.getDiFile(0).getHighBit();		
-		int max = 2<<high_bit;
-		int window_center = max/2;				
+//		int high_bit =_slices.getDiFile(0).getHighBit();		
+//		int max = 2<<high_bit;
+//		int window_center = max/2;	
+		int max = _window_width;
+		int window_center = _window_center;
 		Integer[][] prime_pixel = new Integer[_h][_w];
 		
 		switch (_viewmodel) {		

@@ -103,7 +103,8 @@ public class MenuBar extends JMenuBar {
 		rbMenuItem.addActionListener(setViewModeListener);
 		group.add(rbMenuItem);
 		_menu2d.add(rbMenuItem);
-
+		
+		
 		_menu2d.addSeparator();		
 
 		_no_entries2d = new JMenuItem(new String("no segmentations yet"));
@@ -129,6 +130,11 @@ public class MenuBar extends JMenuBar {
 
 		item = new JMenuItem(new String("Neue Segmentierung"));
 		item.addActionListener(newSegmentListener);
+		_menuTools.add(item);
+		
+		// addition in exercise 4
+		item = new JMenuItem(new String("Setting"));
+		item.addActionListener(setWindowWidthCenterListener);
 		_menuTools.add(item);
 
 		// -------------------------------------------------------------------------------------
@@ -257,6 +263,14 @@ public class MenuBar extends JMenuBar {
 			}
 		}
 	};
+	
+	//addition in exercise 4
+	ActionListener setWindowWidthCenterListener = new ActionListener() {
+		public void actionPerformed(ActionEvent event) {	
+			//_tools.showTool(new ToolWindowSelector());
+			new ToolWindowSelector();
+		}
+	};	
 
 	/**
 	 * ActionListener for toggling the 2d background image.
